@@ -53,7 +53,7 @@ export function installKeys() {
         return;
       case 'ArrowUp':
         e.preventDefault();
-        return store.move(-1, { play: true, slow: true });
+        return store.move(-1, { play: true, slow: s.settings.slowOnPrev });
       case 'ArrowDown':
         e.preventDefault();
         return store.move(1, { play: true });

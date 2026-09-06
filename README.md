@@ -20,7 +20,7 @@ Everything acts on the clip under the amber playhead.
 | Key | Action |
 | --- | --- |
 | `Space` / `Shift+Space` | Play–pause / play clip from its start in slow motion |
-| `↑` / `↓` | Previous clip (plays slow) / next clip |
+| `↑` / `↓` | Previous / next clip (slow-motion on `↑` is a setting, off by default) |
 | `←` `→` | Step one frame (10 ms) · `Shift` ×10 · `Alt` ÷10 |
 | `Home` / `End` | Clip start / end |
 | `Enter` / `Shift+Enter` | Promote to next lane / demote |

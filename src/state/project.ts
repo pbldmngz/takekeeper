@@ -16,6 +16,7 @@ export interface Settings extends DetectParams {
   contextSeconds: number; // audio shown around a clip for trimming
   stepMs: number; // one "frame" of ←/→
   slowRate: number;
+  slowOnPrev: boolean; // ↑ replays the previous clip in slow motion
   gainDb: number; // monitoring boost, never exported
   autoplay: boolean;
   theme: 'auto' | 'dark' | 'light';
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contextSeconds: 1.5,
   stepMs: 10,
   slowRate: 0.5,
+  slowOnPrev: false,
   gainDb: 0,
   autoplay: true,
   theme: 'auto',

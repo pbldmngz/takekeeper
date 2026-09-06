@@ -34,7 +34,7 @@ export function Toolbar() {
     <div class="hints">
       <Tool k="space" label={playing ? 'pause' : 'play'} on={() => s.togglePlay()} off={none} />
       <Tool k="⇧space" label="slow" title="play clip from its start in slow motion" on={() => clip && void s.playFrom(clip.start, true)} off={none} />
-      <Tool k="↑" label="prev" title="previous clip, plays slow" on={() => s.move(-1, { play: true, slow: true })} />
+      <Tool k="↑" label="prev" title="previous clip" on={() => s.move(-1, { play: true, slow: settings.slowOnPrev })} />
       <Tool k="↓" label="next" on={() => s.move(1, { play: true })} />
       <Tool k="←" label="" title="step back one frame" on={() => s.step(-step)} off={none} />
       <Tool k="→" label="frame" title="step forward one frame" on={() => s.step(step)} off={none} />

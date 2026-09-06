@@ -121,6 +121,15 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
+          slow motion on <kbd>↑</kbd>
+          <small>replay the previous clip at the slow speed. <kbd>shift space</kbd> always does.</small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.slowOnPrev} onChange={(e) => s.updateSettings({ slowOnPrev: (e.target as HTMLInputElement).checked })} />
+        </div>
+      </div>
+      <div class="row">
+        <label>
           autoplay
           <small>continue to the next clip when one finishes.</small>
         </label>
@@ -369,7 +378,7 @@ function HelpModal() {
   const rows: Array<[string, string[]]> = [
     ['play / pause', ['space']],
     ['play clip from start, slow', ['shift', 'space']],
-    ['previous clip (plays slow)', ['↑']],
+    ['previous clip', ['↑']],
     ['next clip', ['↓']],
     ['step one frame', ['←', '→']],
     ['step ×10 / ÷10', ['shift', 'alt']],

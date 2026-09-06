@@ -250,10 +250,10 @@ hr {
   font-size: 15px;
   color: var(--text);
 }
-.brand i {
-  color: var(--cyan);
-  font-style: normal;
-  font-size: 15px;
+.brand svg {
+  width: 15px;
+  height: 20px;
+  display: block;
 }
 .top .actions {
   margin-left: auto;
@@ -273,6 +273,9 @@ hr {
 }
 .banner.quiet {
   color: var(--muted);
+}
+.banner {
+  text-transform: lowercase;
 }
 .banner::before {
   content: '◆';

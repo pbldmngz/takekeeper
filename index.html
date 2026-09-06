@@ -60,6 +60,22 @@
     <div id="app"></div>
 
     <main id="landing">
+      <section id="look" class="wide">
+        <figure class="shot">
+          <img
+            src="/screenshot.png"
+            alt="takekeeper editor: a strip of 848 detected takes along the top, the current take's waveform with the amber playhead, the script panel, and a toolbar with every key"
+            width="1913"
+            height="941"
+            loading="lazy"
+          />
+          <figcaption>
+            a 57-minute session, 848 takes, a few seconds after dropping the file. the amber clip is the one under the playhead; the lanes
+            along the top are the passes.
+          </figcaption>
+        </figure>
+      </section>
+
       <section id="who">
         <h2 class="prompt">made for one job</h2>
         <p>
@@ -122,11 +138,11 @@
         </div>
       </section>
 
-      <section id="keys">
+      <section id="keys" class="wide">
         <h2 class="prompt">keys</h2>
         <p>everything acts on the clip under the amber playhead.</p>
         <div class="keys-cols">
-          <table class="keys">
+          <table class="keytable">
             <tr><td><kbd>space</kbd> / <kbd>shift space</kbd></td><td>play–pause / play clip from its start in slow motion</td></tr>
             <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>previous clip (plays slow) / next clip</td></tr>
             <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>step one frame · shift ×10 · alt ÷10</td></tr>
@@ -136,7 +152,7 @@
             <tr><td><kbd>1</kbd>…<kbd>9</kbd> <kbd>0</kbd></td><td>send to lane n / back to unsorted</td></tr>
             <tr><td><kbd>=</kbd> / <kbd>-</kbd></td><td>monitor gain up / down</td></tr>
           </table>
-          <table class="keys">
+          <table class="keytable">
             <tr><td><kbd>s</kbd></td><td>split at playhead</td></tr>
             <tr><td><kbd>m</kbd> / <kbd>shift m</kbd></td><td>merge with next / previous</td></tr>
             <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>set clip start / end at playhead</td></tr>

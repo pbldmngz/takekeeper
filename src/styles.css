@@ -384,11 +384,38 @@ hr {
 }
 
 #landing {
-  max-width: 760px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 24px 20px 80px;
   display: grid;
   gap: 64px;
+}
+/* prose sections stay at reading width; the screenshot and key table use the full column */
+#landing > section:not(.wide),
+#landing > footer {
+  width: 100%;
+  max-width: 760px;
+  justify-self: center;
+}
+#landing > .wide {
+  width: 100%;
+}
+.shot {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule-2);
+  background: var(--ink-2);
+}
+.shot figcaption {
+  color: var(--dim);
+  font-size: 12.5px;
+  text-align: center;
 }
 #landing section {
   display: grid;
@@ -444,28 +471,33 @@ hr {
   content: '0' counter(step) ' · ';
   color: var(--amber);
 }
-table.keys {
+table.keytable {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
 }
-table.keys td {
+table.keytable td {
   padding: 7px 10px 7px 0;
   border-bottom: 1px solid var(--rule);
   vertical-align: top;
 }
-table.keys td:first-child {
+table.keytable td:first-child {
   white-space: nowrap;
   width: 1%;
   padding-right: 24px;
 }
-table.keys td:last-child {
+table.keytable td:last-child {
   color: var(--muted);
 }
 .keys-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  grid-template-columns: 1fr;
   gap: 0 40px;
+}
+@media (min-width: 900px) {
+  .keys-cols {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 details {
   border: 1px solid var(--rule);

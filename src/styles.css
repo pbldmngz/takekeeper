@@ -754,13 +754,30 @@ footer.site {
   color: var(--muted);
   font-size: 12.5px;
 }
-.hints span {
+.hints .tool {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  padding: 3px 6px;
+  color: var(--muted);
+  line-height: 1.3;
+  transition: background 0.12s, color 0.12s;
+}
+.hints .tool:hover {
+  background: var(--cyan-dim);
+  color: var(--text);
+}
+.hints .tool:active {
+  background: var(--amber-dim);
+}
+.hints .tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: none;
 }
 .hints .sep {
   color: var(--dim);
+  align-self: center;
 }
 
 /* modals ------------------------------------------------------------------ */

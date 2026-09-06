@@ -1,6 +1,7 @@
 import { TRASH, laneCounts } from '../state/project';
 import { useStore } from '../state/store';
 import { fmtDur, fmtTime } from '../util';
+import { Toolbar } from './Toolbar';
 import { ClipView } from './ClipView';
 import { Logo } from './Logo';
 import { Overview } from './Overview';
@@ -93,59 +94,7 @@ export function Editor() {
         </span>
       </div>
 
-      <div class="hints">
-        <span>
-          <kbd>space</kbd> play
-        </span>
-        <span>
-          <kbd>↑</kbd> prev·slow
-        </span>
-        <span>
-          <kbd>↓</kbd> next
-        </span>
-        <span>
-          <kbd>←</kbd>
-          <kbd>→</kbd> frame
-        </span>
-        <span class="sep">|</span>
-        <span>
-          <kbd class="amber">enter</kbd> promote
-        </span>
-        <span>
-          <kbd>⌫</kbd> trash
-        </span>
-        <span>
-          <kbd>1</kbd>–<kbd>{p.laneNames.length - 1}</kbd> lane
-        </span>
-        <span class="sep">|</span>
-        <span>
-          <kbd>s</kbd> split
-        </span>
-        <span>
-          <kbd>m</kbd> merge
-        </span>
-        <span>
-          <kbd>i</kbd>
-          <kbd>o</kbd> trim
-        </span>
-        <span>
-          <kbd>l</kbd> line
-        </span>
-        <span class="sep">|</span>
-        <span>
-          <kbd>=</kbd>
-          <kbd>-</kbd> gain
-        </span>
-        <span>
-          <kbd>tab</kbd> lane
-        </span>
-        <span>
-          <kbd>ctrl z</kbd> undo
-        </span>
-        <span>
-          <kbd>?</kbd> all keys
-        </span>
-      </div>
+      <Toolbar />
     </div>
   );
 }

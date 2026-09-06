@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070c12" />
+    <title>Takekeeper — sort voice-over takes in your browser</title>
+    <meta
+      name="description"
+      content="Drop an hour-long WAV of voice-over takes. Takekeeper splits it at the silences, then you keep the good takes with the keyboard: multi-pass lanes, split, merge, trim, script line marks, export straight into FL Studio or any DAW. Free, private, nothing uploaded."
+    />
+    <link rel="canonical" href="https://takekeeper.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Takekeeper" />
+    <meta property="og:title" content="Takekeeper — the takes worth keeping" />
+    <meta property="og:description" content="Take triage for voice actors. Split a session at the silences, sort takes into passes with the keyboard, export the keepers. Runs in your browser, nothing uploaded." />
+    <meta property="og:url" content="https://takekeeper.com/" />
+    <meta property="og:image" content="https://takekeeper.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://takekeeper.com/og.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070c12'/%3E%3Cpath d='M16 4l12 12-12 12L4 16z' fill='%235fd3ff'/%3E%3Cpath d='M16 11l5 5-5 5-5-5z' fill='%23ffb02e'/%3E%3C/svg%3E" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "name": "Takekeeper",
+            "url": "https://takekeeper.com/",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web browser (Chrome, Edge)",
+            "description": "Take triage for voice actors: split a long voice-over recording at the silences, sort the takes into passes with the keyboard, fix cuts, and export the keepers as numbered WAV files. Runs entirely in the browser.",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "audience": { "@type": "Audience", "audienceType": "Voice actors, audiobook narrators, dubbing and ADR performers" }
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              { "@type": "Question", "name": "Is my recording uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. Takekeeper reads the file straight from your disk inside the browser. There is no server, no account and no upload; the exported clips are written back to your disk." } },
+              { "@type": "Question", "name": "How long can the recording be?", "acceptedAnswer": { "@type": "Answer", "text": "WAV files can be any length — an hour-long 24-bit session with 800 takes loads in a few seconds and uses almost no memory, because clips are references into the original file, not copies. Compressed formats (MP3, FLAC, OGG, M4A) are decoded in memory, so keep those under about 25 minutes or convert to WAV first." } },
+              { "@type": "Question", "name": "How does it find the takes?", "acceptedAnswer": { "@type": "Answer", "text": "It measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. Short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides of every take. Threshold, minimum silence and margin are adjustable and you can re-detect at any time." } },
+              { "@type": "Question", "name": "What if a cut lands in the wrong place?", "acceptedAnswer": { "@type": "Answer", "text": "Every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour — which restores the original audio between them. Everything has undo." } },
+              { "@type": "Question", "name": "How do I get the takes into FL Studio?", "acceptedAnswer": { "@type": "Answer", "text": "Export the Final lane as a folder of numbered WAV files. In FL Studio's Browser, sort the folder by name, select every file and hold Shift while dropping them onto the Playlist — they land on one track, in order. Turn on Ripple edit so deleting a clip closes the gap." } },
+              { "@type": "Question", "name": "Does it transcribe or match my script?", "acceptedAnswer": { "@type": "Answer", "text": "Not with AI. You paste your script and press L on the first take of each line while listening; every clip after it inherits that line until the next mark, and Shift+L jumps to a specific line number when you went back to redo something. Line numbers are included in the exported file names." } },
+              { "@type": "Question", "name": "Which browsers work?", "acceptedAnswer": { "@type": "Answer", "text": "Chrome and Edge on desktop get everything, including saving straight into a folder and reopening your session with one click. Firefox works with a zip download instead. It is a keyboard tool, so phones and tablets are not the target." } }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body data-phase="empty">
+    <div id="app"></div>
+
+    <main id="landing">
+      <section id="who">
+        <h2 class="prompt">made for one job</h2>
+        <p>
+          <b>takekeeper is a take-selection tool for voice actors.</b> you record a session in one long file — take after take, with silence in
+          between. takekeeper turns that file into individual takes and gives you a keyboard-only way to keep the good ones, in as many
+          passes as you need, without ever touching a timeline.
+        </p>
+        <p>
+          it is built for <b>voice-over sessions</b>, <b>audiobook narration</b>, <b>dubbing and adr</b>, character reads, auditions, and
+          pickups — anything where you need to <b>split a voice recording at the silences</b>, listen to every take, and end up with a clean
+          folder of keepers for your daw.
+        </p>
+      </section>
+
+      <section id="how">
+        <h2 class="prompt">how it works</h2>
+        <div class="steps">
+          <div class="card">
+            <h3>drop the session</h3>
+            <p>a wav of any length. the silences between takes are detected in seconds and every take becomes a clip in the <b>unsorted</b> lane.</p>
+          </div>
+          <div class="card">
+            <h3>listen and sort</h3>
+            <p>clips autoplay one after another. <kbd class="amber">enter</kbd> promotes a take to the next lane, <kbd>backspace</kbd> trashes it. do a second pass on <b>pass 1</b>, a third on <b>pass 2</b>, until <b>final</b> holds the ones you want.</p>
+          </div>
+          <div class="card">
+            <h3>export the keepers</h3>
+            <p>the final lane becomes numbered wav files written straight into a folder — ready to shift-drop onto one track in fl studio, or into reaper, audition, pro tools.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="what">
+        <h2 class="prompt">what it does</h2>
+        <div class="cards">
+          <div class="card">
+            <h3>detection built for takes</h3>
+            <p>800 takes in an hour is the normal case. threshold, minimum silence and margin are adjustable; re-detect never loses your sorting.</p>
+          </div>
+          <div class="card">
+            <h3>lanes instead of layers</h3>
+            <p>the multi-pass selection you already do by dragging clips between tracks — without the dragging.</p>
+          </div>
+          <div class="card amber">
+            <h3>keyboard only</h3>
+            <p>every action is a key, placed so a whole session can be sorted with one hand and no mouse.</p>
+          </div>
+          <div class="card">
+            <h3>fix the cuts</h3>
+            <p>replay slow, step by a frame, split, merge a miscut back together, set a new start or end. undo everything.</p>
+          </div>
+          <div class="card">
+            <h3>script line marks</h3>
+            <p>paste your script, press <kbd>l</kbd> when a new line starts; every take knows its line, so comparing the five reads of line 14 takes seconds.</p>
+          </div>
+          <div class="card">
+            <h3>private, bit-exact</h3>
+            <p>no upload, no account. exported takes are byte-for-byte slices of your recording, in its own bit depth, with a 5 ms fade at each cut.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="keys">
+        <h2 class="prompt">keys</h2>
+        <p>everything acts on the clip under the amber playhead.</p>
+        <div class="keys-cols">
+          <table class="keys">
+            <tr><td><kbd>space</kbd> / <kbd>shift space</kbd></td><td>play–pause / play clip from its start in slow motion</td></tr>
+            <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>previous clip (plays slow) / next clip</td></tr>
+            <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>step one frame · shift ×10 · alt ÷10</td></tr>
+            <tr><td><kbd>home</kbd> / <kbd>end</kbd></td><td>clip start / end</td></tr>
+            <tr><td><kbd class="amber">enter</kbd> / <kbd>shift enter</kbd></td><td>promote to next lane / demote</td></tr>
+            <tr><td><kbd>backspace</kbd></td><td>trash — the lane closes up</td></tr>
+            <tr><td><kbd>1</kbd>…<kbd>9</kbd> <kbd>0</kbd></td><td>send to lane n / back to unsorted</td></tr>
+            <tr><td><kbd>=</kbd> / <kbd>-</kbd></td><td>monitor gain up / down</td></tr>
+          </table>
+          <table class="keys">
+            <tr><td><kbd>s</kbd></td><td>split at playhead</td></tr>
+            <tr><td><kbd>m</kbd> / <kbd>shift m</kbd></td><td>merge with next / previous</td></tr>
+            <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>set clip start / end at playhead</td></tr>
+            <tr><td><kbd>l</kbd> / <kbd>shift l</kbd></td><td>next script line starts here / jump to line</td></tr>
+            <tr><td><kbd>t</kbd></td><td>edit the script</td></tr>
+            <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>switch lane</td></tr>
+            <tr><td><kbd>ctrl z</kbd> / <kbd>ctrl shift z</kbd></td><td>undo / redo</td></tr>
+            <tr><td><kbd>e</kbd> · <kbd>,</kbd> · <kbd>?</kbd></td><td>export · settings · key reference</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="daw">
+        <h2 class="prompt">into your daw</h2>
+        <ul>
+          <li><b>fl studio:</b> sort the exported folder by name, select all, hold <b>shift</b> while dropping onto the playlist — one track, in order. turn on <b>ripple edit</b> so deleting a clip closes the gap.</li>
+          <li><b>reaper:</b> select the files in the media explorer, insert as one track sequentially (insert → as one track, sequentially).</li>
+          <li><b>audition / pro tools / logic:</b> import the folder; the numbering keeps everything chronological. or export one merged wav with a fixed gap between takes.</li>
+        </ul>
+      </section>
+
+      <section id="faq">
+        <h2 class="prompt">faq</h2>
+        <details>
+          <summary>is my recording uploaded anywhere?</summary>
+          <p>no. takekeeper reads the file straight from your disk inside the browser. there is no server, no account and no upload; exported clips are written back to your disk.</p>
+        </details>
+        <details>
+          <summary>how long can the recording be?</summary>
+          <p>wav files can be any length — an hour-long 24-bit session with 800 takes loads in a few seconds and uses almost no memory, because clips are references into the original file, not copies. compressed formats (mp3, flac, ogg, m4a) are decoded in memory, so keep those under about 25 minutes or convert to wav first.</p>
+        </details>
+        <details>
+          <summary>how does it find the takes?</summary>
+          <p>it measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides. threshold, minimum silence and margin are adjustable and you can re-detect at any time.</p>
+        </details>
+        <details>
+          <summary>what if a cut lands in the wrong place?</summary>
+          <p>every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour — which restores the original audio between them. everything has undo.</p>
+        </details>
+        <details>
+          <summary>does it transcribe or match my script?</summary>
+          <p>not with ai. paste your script, press <kbd>l</kbd> on the first take of each line while listening; every clip after it inherits that line until the next mark, and <kbd>shift l</kbd> jumps to a line number when you went back to redo something. line numbers go into the exported file names.</p>
+        </details>
+        <details>
+          <summary>which browsers work?</summary>
+          <p>chrome and edge on desktop get everything, including saving straight into a folder and reopening your session with one click. firefox works with a zip download instead. it is a keyboard tool, so phones and tablets are not the target.</p>
+        </details>
+        <details>
+          <summary>can i record directly in takekeeper?</summary>
+          <p>not yet. record in your usual chain — your interface and daw do it better — and drop the wav here. recording pickups in the browser is on the list.</p>
+        </details>
+      </section>
+
+      <footer class="site">
+        <span>◆ takekeeper</span>
+        <span>take triage for voice actors</span>
+        <span>free · private · keyboard first</span>
+        <span>wav of any length · mp3 / flac / ogg for shorter files</span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

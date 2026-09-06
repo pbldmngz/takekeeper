@@ -294,15 +294,30 @@ hr {
   display: grid;
   gap: 18px;
 }
+.hero .eyebrow {
+  color: var(--amber);
+  font-size: 13px;
+  margin-bottom: -6px;
+}
+.hero .eyebrow::before {
+  content: '> ';
+  color: var(--dim);
+}
 .hero h1 {
-  font-size: clamp(30px, 4.4vw, 44px);
+  font-size: clamp(26px, 3.6vw, 36px);
   color: var(--cyan);
-  line-height: 1.15;
+  line-height: 1.2;
+  max-width: 24ch;
 }
 .hero .lead {
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--muted);
-  max-width: 60ch;
+  max-width: 66ch;
+  line-height: 1.7;
+}
+.hero .lead b {
+  color: var(--text);
+  font-weight: 500;
 }
 .drop {
   margin-top: 22px;

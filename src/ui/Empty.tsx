@@ -39,8 +39,12 @@ export function Empty() {
         </div>
       ) : (
         <section class="hero">
-          <h1>the takes worth keeping.</h1>
-          <p class="lead">split a voice-over session at the silences, sort the takes with the keyboard, export the keepers.</p>
+          <p class="eyebrow">for voice actors</p>
+          <h1>split a recording session into takes. keep the good ones.</h1>
+          <p class="lead">
+            drop the one long wav from your session. takekeeper cuts it at every silence, plays the takes back to back, and you
+            promote or trash each one with a single key — then export the keepers as numbered files for fl studio, reaper or any daw.
+          </p>
 
           <div
             class={`drop${over ? ' over' : ''}`}
@@ -52,9 +56,9 @@ export function Empty() {
             onDragLeave={() => setOver(false)}
             onDrop={onDrop}
           >
-            <span class="big">drop a wav here</span>
+            <span class="big">drop your session wav here</span>
             <span class="muted">
-              or press <kbd>ctrl o</kbd> to browse · nothing is uploaded
+              or press <kbd>ctrl o</kbd> to browse · any length · nothing is uploaded
             </span>
           </div>
 

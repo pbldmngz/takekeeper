@@ -322,7 +322,7 @@ function ExportModal() {
       <div class="tips">
         <b>1.</b> in the browser, sort the folder <b>by name</b> and select every file.
         <br />
-        <b>2.</b> hold <b>shift</b> while dropping them onto the playlist — they land on one track, in order.
+        <b>2.</b> hold <b>shift</b> while dropping them onto the playlist; they land on one track, in order.
         <br />
         <b>3.</b> turn on <b>ripple edit</b> so deleting a clip closes the gap.
       </div>

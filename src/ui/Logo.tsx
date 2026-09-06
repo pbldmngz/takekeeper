@@ -1,4 +1,4 @@
-/** The mark: two takes on the baseline, one lifted out — the promote gesture. */
+/** The mark: two takes on the baseline, one lifted out: the promote gesture. */
 export function Mark() {
   return (
     <svg viewBox="0 0 48 64" aria-hidden="true">

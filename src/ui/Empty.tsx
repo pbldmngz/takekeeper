@@ -43,7 +43,7 @@ export function Empty() {
           <h1>split a recording session into takes. keep the good ones.</h1>
           <p class="lead">
             drop the one long wav from your session. takekeeper cuts it at every silence, plays the takes back to back, and you
-            promote or trash each one with a single key — then export the keepers as numbered files for fl studio, reaper or any daw.
+            promote or trash each one with a single key, then export the keepers as numbered files for fl studio, reaper or any daw.
           </p>
 
           <div

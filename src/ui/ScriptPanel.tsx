@@ -50,7 +50,7 @@ export function ScriptPanel() {
           no script yet. press <kbd>t</kbd> to paste one, one line per line.
           <br />
           <br />
-          while listening, press <kbd>l</kbd> on the first take of each line — every clip after it inherits that line until the next mark.
+          while listening, press <kbd>l</kbd> on the first take of each line; every clip after it inherits that line until the next mark.
         </div>
       ) : (
         <div class="lines" ref={listRef}>

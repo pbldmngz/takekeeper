@@ -142,11 +142,22 @@ function SettingsModal() {
       <div class="row">
         <label>
           frame step
-          <small>← → move this much. shift ×10, alt ÷10.</small>
+          <small>one frame. alt steps a tenth of it.</small>
         </label>
         <div class="val">
           <input type="range" min={1} max={100} step={1} value={st.stepMs} onInput={(e) => s.updateSettings({ stepMs: num(e) })} />
           <span class="mono">{st.stepMs} ms</span>
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          arrows move fast
+          <small>
+            <kbd>←</kbd> <kbd>→</kbd> jump ten frames; <kbd>shift</kbd> steps one frame, precise. off swaps them.
+          </small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.fastArrows} onChange={(e) => s.updateSettings({ fastArrows: (e.target as HTMLInputElement).checked })} />
         </div>
       </div>
       <div class="row">
@@ -380,8 +391,8 @@ function HelpModal() {
     ['play clip from start, slow', ['shift', 'space']],
     ['previous clip', ['↑']],
     ['next clip', ['↓']],
-    ['step one frame', ['←', '→']],
-    ['step ×10 / ÷10', ['shift', 'alt']],
+    ['move the playhead (ten frames)', ['←', '→']],
+    ['one frame, precise / a tenth', ['shift', 'alt']],
     ['clip start / end', ['home', 'end']],
     ['toggle autoplay', ['a']],
     ['monitor gain up / down', ['=', '-']],

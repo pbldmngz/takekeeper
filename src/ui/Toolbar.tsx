@@ -28,7 +28,7 @@ export function Toolbar() {
   if (!p || !src) return null;
   const clip = s.clip();
   const none = !clip;
-  const step = Math.max(1, Math.round((settings.stepMs / 1000) * src.sampleRate));
+  const step = Math.max(1, Math.round((settings.stepMs / 1000) * src.sampleRate)) * (settings.fastArrows ? 10 : 1);
 
   return (
     <div class="hints">
@@ -36,8 +36,8 @@ export function Toolbar() {
       <Tool k="⇧space" label="slow" title="play clip from its start in slow motion" on={() => clip && void s.playFrom(clip.start, true)} off={none} />
       <Tool k="↑" label="prev" title="previous clip" on={() => s.move(-1, { play: true, slow: settings.slowOnPrev })} />
       <Tool k="↓" label="next" on={() => s.move(1, { play: true })} />
-      <Tool k="←" label="" title="step back one frame" on={() => s.step(-step)} off={none} />
-      <Tool k="→" label="frame" title="step forward one frame" on={() => s.step(step)} off={none} />
+      <Tool k="←" label="" title="move back" on={() => s.step(-step)} off={none} />
+      <Tool k="→" label="move" title="move forward" on={() => s.step(step)} off={none} />
       <Sep />
       <Tool k="enter" label="promote" title="move to the next lane" on={() => s.promote()} off={none} amber />
       <Tool k="⇧enter" label="demote" title="move down one lane" on={() => s.demote()} off={none} />

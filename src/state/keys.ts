@@ -41,7 +41,8 @@ export function installKeys() {
     if (mod) return;
 
     const sr = s.source!.sampleRate;
-    const step = Math.round((s.settings.stepMs / 1000) * sr * (e.shiftKey ? 10 : e.altKey ? 0.1 : 1));
+    const fast = s.settings.fastArrows ? !e.shiftKey : e.shiftKey;
+    const step = Math.round((s.settings.stepMs / 1000) * sr * (e.altKey ? 0.1 : fast ? 10 : 1));
 
     switch (e.key) {
       case ' ':

@@ -18,6 +18,10 @@ export function installKeys() {
     }
     if (s.modal || isTyping(e.target)) return;
 
+    if (mod && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      return void store.saveProjectFile();
+    }
     if (mod && e.key.toLowerCase() === 'o') {
       e.preventDefault();
       return void store.pickFile();

@@ -49,6 +49,7 @@
               { "@type": "Question", "name": "What if a cut lands in the wrong place?", "acceptedAnswer": { "@type": "Answer", "text": "Every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour, which restores the original audio between them. Everything has undo." } },
               { "@type": "Question", "name": "How do I get the takes into FL Studio?", "acceptedAnswer": { "@type": "Answer", "text": "Export the Final lane as a folder of numbered WAV files. In FL Studio's Browser, sort the folder by name, select every file and hold Shift while dropping them onto the Playlist; they land on one track, in order. Turn on Ripple edit so deleting a clip closes the gap." } },
               { "@type": "Question", "name": "Does it transcribe or match my script?", "acceptedAnswer": { "@type": "Answer", "text": "Not with AI. You paste your script and press L on the first take of each line while listening; every clip after it inherits that line until the next mark, and Shift+L jumps to a specific line number when you went back to redo something. Line numbers are included in the exported file names." } },
+              { "@type": "Question", "name": "Will my sorting survive closing the tab?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lanes, cuts, line marks and the script are saved in the browser as you work and restored when you open the same WAV. Press Ctrl+S to also save a small .takekeeper.json project file next to the recording; drop it on the landing page in any browser to pick up where you left off." } },
               { "@type": "Question", "name": "Which browsers work?", "acceptedAnswer": { "@type": "Answer", "text": "Chrome and Edge on desktop get everything, including saving straight into a folder and reopening your session with one click. Firefox works with a zip download instead. It is a keyboard tool, so phones and tablets are not the target." } }
             ]
           }
@@ -161,6 +162,7 @@
             <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>switch lane</td></tr>
             <tr><td><kbd>ctrl z</kbd> / <kbd>ctrl shift z</kbd></td><td>undo / redo</td></tr>
             <tr><td><kbd>e</kbd> · <kbd>,</kbd> · <kbd>?</kbd></td><td>export · settings · key reference</td></tr>
+            <tr><td><kbd>ctrl s</kbd></td><td>save the project file (lanes, cuts, line marks, script)</td></tr>
           </table>
         </div>
       </section>
@@ -199,6 +201,10 @@
         <details>
           <summary>which browsers work?</summary>
           <p>chrome and edge on desktop get everything, including saving straight into a folder and reopening your session with one click. firefox works with a zip download instead. it is a keyboard tool, so phones and tablets are not the target.</p>
+        </details>
+        <details>
+          <summary>will my sorting survive closing the tab?</summary>
+          <p>yes: lanes, cuts, line marks and the script are saved in the browser as you work and come back when you open the same wav. they are tied to that file, so if you re-export or rename the recording, takekeeper looks for a saved project with the same length and picks it up. for anything you care about, press <kbd>ctrl s</kbd>: it writes a small .takekeeper.json next to the wav that you can drop on this page any time, in any browser.</p>
         </details>
         <details>
           <summary>can i record directly in takekeeper?</summary>

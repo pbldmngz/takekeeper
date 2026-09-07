@@ -9,7 +9,7 @@ import { ScriptPanel } from './ScriptPanel';
 
 export function Editor() {
   const s = useStore();
-  const { project: p, source: src, lane, playing, slow, settings, toast } = s.state;
+  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved } = s.state;
   if (!p || !src) return null;
   const counts = laneCounts(p);
   const clip = s.clip();
@@ -39,6 +39,13 @@ export function Editor() {
           </button>
         </nav>
         <div class="actions">
+          <button
+            class={`k${unsaved ? ' amber' : ''}`}
+            onClick={() => void s.saveProjectFile()}
+            title={unsaved ? `${unsaved} unsaved edit${unsaved === 1 ? '' : 's'} · save the project file` : 'save the project file'}
+          >
+            save <kbd>ctrl s</kbd>
+          </button>
           <button class="k amber" onClick={() => s.openModal('export')}>
             export <kbd>e</kbd>
           </button>

@@ -354,6 +354,22 @@ function ExportModal() {
         </div>
       )}
 
+      <h3>project file</h3>
+      <div class="row">
+        <label>
+          lanes, cuts, line marks and script
+          <small>
+            saved in this browser automatically, but a file is safer: keep it next to the wav and drop it on the landing page to pick up
+            where you left off. <kbd>ctrl s</kbd> anywhere.
+          </small>
+        </label>
+        <div class="val">
+          <button class="k" onClick={() => void s.saveProjectFile()}>
+            save project
+          </button>
+        </div>
+      </div>
+
       <h3>into fl studio</h3>
       <div class="tips">
         <b>1.</b> in the browser, sort the folder <b>by name</b> and select every file.
@@ -427,6 +443,7 @@ function HelpModal() {
     ['export', ['e']],
     ['settings', [',']],
     ['open a file', ['ctrl', 'o']],
+    ['save the project file', ['ctrl', 's']],
     ['stop / close', ['esc']],
   ];
   return (

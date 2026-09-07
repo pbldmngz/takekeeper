@@ -2,12 +2,14 @@ import { useEffect, useState } from 'preact/hooks';
 import { analyze, segment, type Analysis } from '../audio/analyze';
 import { fileKey, openAudio, type Source } from '../audio/wav';
 import { Player, type Loaded } from '../audio/player';
-import { clamp, fmtTime, uid } from '../util';
+import { saveBlob } from '../audio/export';
+import { clamp, fmtTime, stem, uid } from '../util';
 import {
   TRASH,
   byStart,
   derivedLines,
   finalLane,
+  findProjectFor,
   idbGet,
   idbSet,
   laneClips,
@@ -15,6 +17,8 @@ import {
   lastProject,
   loadProject,
   loadSettings,
+  parseProjectFile,
+  projectFileText,
   saveProject,
   saveSettings,
   scriptLines,
@@ -43,6 +47,7 @@ export interface AppState {
   resumable: { key: string; name: string } | null;
   toast: { text: string; n: number } | null;
   scriptEditing: boolean;
+  unsaved: number; // edits since the project was last saved to a file
 }
 
 const MAX_UNDO = 300;
@@ -66,6 +71,7 @@ class Store {
     resumable: lastProject(),
     toast: null,
     scriptEditing: false,
+    unsaved: 0,
   };
 
   player = new Player();
@@ -187,6 +193,7 @@ class Store {
 
   async openFile(file: File, handle: FileSystemFileHandle | null = null) {
     const s = this.state;
+    if (/\.json$/i.test(file.name) || file.type === 'application/json') return this.importProjectFile(file);
     this.player.stop();
     s.phase = 'loading';
     s.error = null;
@@ -209,9 +216,15 @@ class Store {
       this.redoStack = [];
       this.laneMemory.clear();
 
-      const existing = loadProject(src.key);
+      const exact = loadProject(src.key);
+      const existing = exact ?? findProjectFor(src);
       if (existing) {
+        if (!exact) {
+          existing.key = src.key;
+          existing.name = src.name;
+        }
         s.project = existing;
+        saveProject(existing);
         s.status = '';
       } else {
         s.project = this.freshProject(src, an);
@@ -220,6 +233,7 @@ class Store {
       this.handle = handle;
       if (handle) void idbSet(`handle:${src.key}`, handle);
       s.resumable = null;
+      s.unsaved = 0;
       s.lane = 0;
       s.phase = 'ready';
       s.progress = null;
@@ -258,7 +272,10 @@ class Store {
     if ('showOpenFilePicker' in window) {
       try {
         const [h] = await window.showOpenFilePicker({
-          types: [{ description: 'Audio', accept: { 'audio/*': ['.wav', '.flac', '.mp3', '.ogg', '.m4a', '.aiff', '.aif'] } }],
+          types: [
+            { description: 'Audio', accept: { 'audio/*': ['.wav', '.flac', '.mp3', '.ogg', '.m4a', '.aiff', '.aif'] } },
+            { description: 'takekeeper project', accept: { 'application/json': ['.json'] } },
+          ],
         });
         await this.openFile(await h.getFile(), h);
       } catch (e) {
@@ -268,7 +285,7 @@ class Store {
     }
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'audio/*,.wav,.flac,.mp3,.ogg,.m4a';
+    input.accept = 'audio/*,.wav,.flac,.mp3,.ogg,.m4a,.json';
     input.onchange = () => {
       const f = input.files?.[0];
       if (f) void this.openFile(f);
@@ -298,6 +315,47 @@ class Store {
     this.emit();
   }
 
+  /** Load a saved project file; the matching recording is picked afterwards. */
+  async importProjectFile(file: File) {
+    const s = this.state;
+    try {
+      const p = parseProjectFile(await file.text());
+      saveProject(p);
+      if (s.phase === 'ready' && s.source && s.source.frames === p.audio.frames && s.source.sampleRate === p.audio.sampleRate) {
+        p.key = s.source.key;
+        p.name = s.source.name;
+        this.undoStack.push(s.project!.clips);
+        this.redoStack = [];
+        s.project = p;
+        saveProject(p);
+        this.afterHistory(`project loaded · ${p.clips.length} clips`);
+        return;
+      }
+      s.error = null;
+      s.resumable = { key: p.key, name: p.name };
+      this.toast(`project loaded · now drop ${p.name}`);
+    } catch (e) {
+      this.fail(e);
+    }
+    this.emit();
+  }
+
+  /** Save lanes, cuts, line marks and script as a file next to the recording. */
+  async saveProjectFile() {
+    const p = this.state.project;
+    if (!p) return;
+    const blob = new Blob([projectFileText(p)], { type: 'application/json' });
+    try {
+      if (await saveBlob(blob, `${stem(p.name)}.takekeeper.json`)) {
+        this.state.unsaved = 0;
+        this.toast('project saved');
+      }
+    } catch (e) {
+      this.fail(e);
+    }
+    this.emit();
+  }
+
   private fail(e: unknown) {
     this.state.error = e instanceof Error ? e.message : String(e);
     this.emit();
@@ -319,6 +377,7 @@ class Store {
     if (this.undoStack.length > MAX_UNDO) this.undoStack.shift();
     this.redoStack = [];
     p.clips = fn(p.clips);
+    this.state.unsaved++;
     this.persist();
     this.emit();
   }
@@ -463,7 +522,15 @@ class Store {
     } else {
       const c = this.clip();
       if (!c) return;
-      const pos = this.state.pos >= c.end && this.state.pos < this.viewRange(c)[1] ? this.state.pos : this.state.pos >= c.end ? c.start : this.state.pos;
+      const pos = this.state.pos;
+      if (pos < c.start) return void this.playFrom(c.start, false); // before IN: this clip from its start
+      if (pos >= c.end) {
+        // at or past OUT: the next clip in this lane
+        const list = this.laneList();
+        const next = list[list.findIndex((x) => x.id === c.id) + 1];
+        if (next) return this.gotoClip(next.id, { play: true });
+        return void this.playFrom(c.start, false);
+      }
       void this.playFrom(pos, false);
     }
   }

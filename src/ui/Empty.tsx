@@ -60,6 +60,9 @@ export function Empty() {
             <span class="muted">
               or press <kbd>ctrl o</kbd> to browse · any length · nothing is uploaded
             </span>
+            <span class="dim">
+              a saved <b>.takekeeper.json</b> project can be dropped here too, then its wav
+            </span>
           </div>
 
           {resumable && (

@@ -36,7 +36,8 @@ Everything acts on the clip under the amber playhead.
 | `Tab` / `Shift+Tab` | Switch lane |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |
 | `E` · `,` · `?` | Export · Settings · Key reference |
-| `Ctrl+O` | Open a file |
+| `Ctrl+O` | Open a file (a `.takekeeper.json` project works too) |
+| `Ctrl+S` | Save the project file: lanes, cuts, line marks, script |
 | `Esc` | Stop / close |
 
 ## Into FL Studio

@@ -138,6 +138,49 @@ export function saveProject(p: Project) {
   }
 }
 
+const PROJECT_FILE = 'takekeeper-project';
+
+/** Serialise a project for saving next to the recording. */
+export function projectFileText(p: Project): string {
+  return JSON.stringify({ format: PROJECT_FILE, version: 1, savedAt: new Date().toISOString(), project: p }, null, 1);
+}
+
+export function parseProjectFile(text: string): Project {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error('That is not a takekeeper project file.');
+  }
+  const wrapped = raw as { format?: string; project?: Project };
+  const p = wrapped?.format === PROJECT_FILE ? wrapped.project : (raw as Project);
+  if (!p || p.version !== 1 || !Array.isArray(p.clips) || !p.audio || !Array.isArray(p.laneNames)) {
+    throw new Error('That is not a takekeeper project file.');
+  }
+  return p;
+}
+
+/** A saved project for the same recording under a different key (file re-saved, moved, renamed). */
+export function findProjectFor(audio: { name: string; frames: number; sampleRate: number; channels: number }): Project | null {
+  const prefix = K.project('');
+  let best: Project | null = null;
+  const score = (p: Project) => (p.name === audio.name ? 1e15 : 0) + (p.savedAt ?? 0);
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k?.startsWith(prefix)) continue;
+      const p = loadProject(k.slice(prefix.length));
+      if (!p) continue;
+      const a = p.audio;
+      if (a.frames !== audio.frames || a.sampleRate !== audio.sampleRate || a.channels !== audio.channels) continue;
+      if (!best || score(p) > score(best)) best = p;
+    }
+  } catch {
+    /* ignore */
+  }
+  return best;
+}
+
 export function lastProject(): { key: string; name: string } | null {
   try {
     const raw = localStorage.getItem(K.last);

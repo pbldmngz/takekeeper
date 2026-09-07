@@ -146,7 +146,7 @@ export function myLines(lines: ScriptLine[], character: string | null | undefine
 // ---- persistence (localStorage for JSON, IndexedDB for file handles) ----
 
 const K = {
-  project: (key: string) => `takekeeper:project:${key}`,
+  legacyProject: (key: string) => `takekeeper:project:${key}`,
   settings: 'takekeeper:settings',
   last: 'takekeeper:last',
 };
@@ -173,27 +173,6 @@ export function saveSettings(s: Settings) {
   }
 }
 
-export function loadProject(key: string): Project | null {
-  try {
-    const raw = localStorage.getItem(K.project(key));
-    if (!raw) return null;
-    const p = JSON.parse(raw) as Project;
-    if (p.version !== 1 || !Array.isArray(p.clips)) return null;
-    return p;
-  } catch {
-    return null;
-  }
-}
-
-export function saveProject(p: Project) {
-  try {
-    localStorage.setItem(K.project(p.key), JSON.stringify({ ...p, savedAt: Date.now() }));
-    localStorage.setItem(K.last, JSON.stringify({ key: p.key, name: p.name }));
-  } catch {
-    /* quota - project JSON is small, so this should not happen */
-  }
-}
-
 const PROJECT_FILE = 'takekeeper-project';
 
 /** Serialise a project for saving next to the recording. */
@@ -216,73 +195,45 @@ export function parseProjectFile(text: string): Project {
   return p;
 }
 
-/** A saved project for the same recording under a different key (file re-saved, moved, renamed). */
-export function findProjectFor(audio: { name: string; frames: number; sampleRate: number; channels: number }): Project | null {
-  const prefix = K.project('');
-  let best: Project | null = null;
-  const score = (p: Project) => (p.name === audio.name ? 1e15 : 0) + (p.savedAt ?? 0);
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k?.startsWith(prefix)) continue;
-      const p = loadProject(k.slice(prefix.length));
-      if (!p) continue;
-      const a = p.audio;
-      if (a.frames !== audio.frames || a.sampleRate !== audio.sampleRate || a.channels !== audio.channels) continue;
-      if (!best || score(p) > score(best)) best = p;
-    }
-  } catch {
-    /* ignore */
-  }
-  return best;
-}
+// ---- IndexedDB: projects (no practical size limit) and file handles ----
 
-/** Forget a saved project; the recording itself is untouched. Points "last" at the newest remaining one. */
-export function deleteProject(key: string) {
-  try {
-    localStorage.removeItem(K.project(key));
-    const prefix = K.project('');
-    let newest: Project | null = null;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k?.startsWith(prefix)) continue;
-      const p = loadProject(k.slice(prefix.length));
-      if (p && (!newest || (p.savedAt ?? 0) > (newest.savedAt ?? 0))) newest = p;
-    }
-    if (newest) localStorage.setItem(K.last, JSON.stringify({ key: newest.key, name: newest.name }));
-    else localStorage.removeItem(K.last);
-  } catch {
-    /* ignore */
-  }
-}
-
-export function lastProject(): { key: string; name: string } | null {
-  try {
-    const raw = localStorage.getItem(K.last);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+let dbPromise: Promise<IDBDatabase> | null = null;
 
 function idb(): Promise<IDBDatabase> {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('takekeeper', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((res, rej) => {
+    const r = indexedDB.open('takekeeper', 2);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'key' });
+    };
     r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    r.onerror = () => {
+      dbPromise = null;
+      rej(r.error);
+    };
   });
+  return dbPromise;
+}
+
+function tx<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T> | void): Promise<T | undefined> {
+  return idb().then(
+    (db) =>
+      new Promise<T | undefined>((res, rej) => {
+        const t = db.transaction(store, mode);
+        const req = fn(t.objectStore(store));
+        let out: T | undefined;
+        if (req) req.onsuccess = () => (out = req.result);
+        t.oncomplete = () => res(out);
+        t.onerror = () => rej(t.error);
+      }),
+  );
 }
 
 export async function idbSet(key: string, value: unknown) {
   try {
-    const db = await idb();
-    await new Promise<void>((res, rej) => {
-      const tx = db.transaction('kv', 'readwrite');
-      tx.objectStore('kv').put(value, key);
-      tx.oncomplete = () => res();
-      tx.onerror = () => rej(tx.error);
-    });
+    await tx('kv', 'readwrite', (s) => void s.put(value, key));
   } catch {
     /* ignore */
   }
@@ -290,13 +241,7 @@ export async function idbSet(key: string, value: unknown) {
 
 export async function idbDel(key: string) {
   try {
-    const db = await idb();
-    await new Promise<void>((res, rej) => {
-      const tx = db.transaction('kv', 'readwrite');
-      tx.objectStore('kv').delete(key);
-      tx.oncomplete = () => res();
-      tx.onerror = () => rej(tx.error);
-    });
+    await tx('kv', 'readwrite', (s) => void s.delete(key));
   } catch {
     /* ignore */
   }
@@ -304,13 +249,94 @@ export async function idbDel(key: string) {
 
 export async function idbGet<T>(key: string): Promise<T | undefined> {
   try {
-    const db = await idb();
-    return await new Promise<T | undefined>((res, rej) => {
-      const r = db.transaction('kv').objectStore('kv').get(key);
-      r.onsuccess = () => res(r.result as T | undefined);
-      r.onerror = () => rej(r.error);
-    });
+    return await tx<T>('kv', 'readonly', (s) => s.get(key) as IDBRequest<T>);
   } catch {
     return undefined;
+  }
+}
+
+const validProject = (p: unknown): p is Project => {
+  const q = p as Project;
+  return !!q && q.version === 1 && Array.isArray(q.clips) && !!q.audio && Array.isArray(q.laneNames);
+};
+
+export async function loadProject(key: string): Promise<Project | null> {
+  try {
+    const p = await tx<Project>('projects', 'readonly', (s) => s.get(key) as IDBRequest<Project>);
+    return validProject(p) ? p : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveProject(p: Project) {
+  try {
+    await tx('projects', 'readwrite', (s) => void s.put({ ...p, savedAt: Date.now() }));
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function deleteProject(key: string) {
+  try {
+    await tx('projects', 'readwrite', (s) => void s.delete(key));
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function allProjects(): Promise<Project[]> {
+  try {
+    const all = (await tx<Project[]>('projects', 'readonly', (s) => s.getAll() as IDBRequest<Project[]>)) ?? [];
+    return all.filter(validProject).sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0));
+  } catch {
+    return [];
+  }
+}
+
+export interface SessionInfo {
+  key: string;
+  name: string;
+  savedAt: number;
+}
+
+/** Saved sessions, newest first. */
+export async function sessions(): Promise<SessionInfo[]> {
+  return (await allProjects()).map((p) => ({ key: p.key, name: p.name, savedAt: p.savedAt ?? 0 }));
+}
+
+/** A saved project for the same recording under a different key (file re-saved, moved, renamed). */
+export async function findProjectFor(audio: { name: string; frames: number; sampleRate: number; channels: number }): Promise<Project | null> {
+  let best: Project | null = null;
+  const score = (p: Project) => (p.name === audio.name ? 1e15 : 0) + (p.savedAt ?? 0);
+  for (const p of await allProjects()) {
+    const a = p.audio;
+    if (a.frames !== audio.frames || a.sampleRate !== audio.sampleRate || a.channels !== audio.channels) continue;
+    if (!best || score(p) > score(best)) best = p;
+  }
+  return best;
+}
+
+/** One-time move of projects saved by earlier versions in localStorage. */
+export async function migrateLegacyProjects() {
+  try {
+    const prefix = K.legacyProject('');
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(prefix)) keys.push(k);
+    }
+    for (const k of keys) {
+      try {
+        const p = JSON.parse(localStorage.getItem(k) ?? 'null');
+        if (validProject(p) && !(await loadProject(p.key))) await saveProject(p);
+      } catch {
+        /* skip a broken entry */
+      }
+      localStorage.removeItem(k);
+    }
+    localStorage.removeItem(K.last);
+  } catch {
+    /* ignore */
   }
 }

@@ -4,9 +4,9 @@ import { Logo } from './Logo';
 
 export function Empty() {
   const s = useStore();
-  const { phase, progress, status, error, resumable } = s.state;
+  const { phase, progress, status, error, sessions } = s.state;
   const [over, setOver] = useState(false);
-  const [confirm, setConfirm] = useState(false);
+  const [confirm, setConfirm] = useState<string | null>(null); // key of the row asking "are you sure?"
 
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -66,38 +66,45 @@ export function Empty() {
             </span>
           </div>
 
-          {resumable && (
-            <p class="resume">
-              <span class="dim">&gt;</span> {confirm ? 'forget the sorting for' : 'continue'} <b>{resumable.name}</b>
-              {confirm && <span class="dim">? the recording stays where it is</span>}
-              <span class="actions">
-                {confirm ? (
-                  <>
-                    <button class="k" onClick={() => setConfirm(false)}>
-                      keep
-                    </button>
-                    <button
-                      class="k amber"
-                      onClick={() => {
-                        s.discardResumable();
-                        setConfirm(false);
-                      }}
-                    >
-                      yes, discard
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button class="k amber" onClick={() => void s.resume()}>
-                      resume
-                    </button>
-                    <button class="k muted" onClick={() => setConfirm(true)} title="forget the saved sorting for this file">
-                      discard
-                    </button>
-                  </>
-                )}
-              </span>
-            </p>
+          {sessions.length > 0 && (
+            <div class="sessions">
+              {sessions.map((r) => {
+                const asking = confirm === r.key;
+                return (
+                  <p class="resume" key={r.key}>
+                    <span class="dim">&gt;</span> {asking ? 'forget the sorting for' : 'continue'} <b>{r.name}</b>
+                    {asking && <span class="dim">? the recording stays where it is</span>}
+                    <span class="actions">
+                      {asking ? (
+                        <>
+                          <button class="k" onClick={() => setConfirm(null)}>
+                            keep
+                          </button>
+                          <button
+                            class="k amber"
+                            onClick={() => {
+                              void s.discard(r.key);
+                              setConfirm(null);
+                            }}
+                          >
+                            yes, discard
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button class="k amber" onClick={() => void s.resume(r.key)}>
+                            resume
+                          </button>
+                          <button class="k muted" onClick={() => setConfirm(r.key)} title="forget the saved sorting for this file">
+                            discard
+                          </button>
+                        </>
+                      )}
+                    </span>
+                  </p>
+                );
+              })}
+            </div>
           )}
           {error && (
             <div class="error">

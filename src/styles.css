@@ -341,6 +341,10 @@ hr {
   border-style: solid;
   background: var(--amber-dim);
 }
+.sessions {
+  display: grid;
+  gap: 6px;
+}
 .resume {
   display: flex;
   align-items: center;

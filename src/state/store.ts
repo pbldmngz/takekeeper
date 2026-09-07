@@ -21,18 +21,20 @@ import {
   laneClips,
   laneName,
   laneSlot,
-  lastProject,
   loadProject,
   loadSettings,
+  migrateLegacyProjects,
   myLines,
   parseProjectFile,
   parseScript,
   projectFileText,
   saveProject,
   saveSettings,
+  sessions,
   type Clip,
   type ScriptLine,
   type Project,
+  type SessionInfo,
   type Settings,
 } from './project';
 
@@ -63,7 +65,7 @@ export interface AppState {
   progress: number | null;
   status: string;
   error: string | null;
-  resumable: { key: string; name: string } | null;
+  sessions: SessionInfo[]; // saved projects, newest first
   toast: { text: string; n: number } | null;
   scriptEditing: boolean;
   unsaved: number; // edits since the project was last saved to a file
@@ -91,7 +93,7 @@ class Store {
     progress: null,
     status: '',
     error: null,
-    resumable: lastProject(),
+    sessions: [],
     toast: null,
     scriptEditing: false,
     unsaved: 0,
@@ -122,6 +124,12 @@ class Store {
     this.player.setGainDb(this.state.settings.gainDb);
     this.applyTheme();
     document.body.dataset.phase = this.state.phase;
+    void migrateLegacyProjects().then(() => this.refreshSessions());
+  }
+
+  async refreshSessions() {
+    this.state.sessions = await sessions();
+    this.emit();
   }
 
   subscribe(fn: () => void) {
@@ -296,23 +304,23 @@ class Store {
       this.redoStack = [];
       this.laneMemory.clear();
 
-      const exact = loadProject(src.key);
-      const existing = exact ?? findProjectFor(src);
+      const exact = await loadProject(src.key);
+      const existing = exact ?? (await findProjectFor(src));
       if (existing) {
         if (!exact) {
           existing.key = src.key;
           existing.name = src.name;
         }
         s.project = existing;
-        saveProject(existing);
+        await saveProject(existing);
         s.status = '';
       } else {
         s.project = this.freshProject(src, an);
-        saveProject(s.project);
+        await saveProject(s.project);
       }
+      void this.refreshSessions();
       this.handle = handle;
       if (handle) void idbSet(`handle:${src.key}`, handle);
-      s.resumable = null;
       s.unsaved = 0;
       s.lane = 0;
       s.lineMode = false;
@@ -379,8 +387,8 @@ class Store {
     input.click();
   }
 
-  async resume() {
-    const r = this.state.resumable;
+  async resume(key: string) {
+    const r = this.state.sessions.find((x) => x.key === key);
     if (!r) return;
     const h = await idbGet<FileSystemFileHandle>(`handle:${r.key}`);
     if (h) {
@@ -406,21 +414,21 @@ class Store {
     const s = this.state;
     try {
       const p = parseProjectFile(await file.text());
-      saveProject(p);
+      await saveProject(p);
+      void this.refreshSessions();
       if (s.phase === 'ready' && s.source && s.source.frames === p.audio.frames && s.source.sampleRate === p.audio.sampleRate) {
         p.key = s.source.key;
         p.name = s.source.name;
         this.undoStack.push(s.project!.clips);
         this.redoStack = [];
         s.project = p;
-        saveProject(p);
+        await saveProject(p);
         this.afterHistory(`project loaded · ${p.clips.length} clips`);
         this.restoreCursor();
         this.emit();
         return;
       }
       s.error = null;
-      s.resumable = { key: p.key, name: p.name };
       this.toast(`project loaded · now drop ${p.name}`);
     } catch (e) {
       this.fail(e);
@@ -445,13 +453,13 @@ class Store {
     this.emit();
   }
 
-  /** Forget the saved sorting for the file offered on the landing page. */
-  discardResumable() {
-    const r = this.state.resumable;
+  /** Forget a saved session; the recording itself is untouched. */
+  async discard(key: string) {
+    const r = this.state.sessions.find((x) => x.key === key);
     if (!r) return;
-    deleteProject(r.key);
-    void idbDel(`handle:${r.key}`);
-    this.state.resumable = lastProject();
+    await deleteProject(key);
+    await idbDel(`handle:${key}`);
+    await this.refreshSessions();
     this.toast(`forgot ${r.name}`);
   }
 
@@ -485,7 +493,7 @@ class Store {
     this.saveTimer = window.setTimeout(() => {
       if (!this.state.project) return;
       this.syncCursor();
-      saveProject(this.state.project);
+      void saveProject(this.state.project);
     }, 250);
   }
 

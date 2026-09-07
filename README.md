@@ -67,7 +67,7 @@ settings (build `npm run build`, output `dist`). No environment variables, no se
 
 - WAV files stream from disk and can be any length. Compressed formats are decoded in memory, so keep those under ~25 minutes.
 - Saving straight into a folder and remembering the file across reloads need Chrome or Edge. Firefox gets the zip download and has to re-pick the file.
-- State lives in the browser's local storage. Clearing site data clears your lanes.
+- Sessions live in the browser's IndexedDB, one per recording, listed on the landing page newest first. Clearing site data clears them; a saved `.takekeeper.json` restores one anywhere.
 
 ## CLI
 

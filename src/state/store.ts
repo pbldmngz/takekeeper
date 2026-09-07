@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'preact/hooks';
-import { analyze, segment, type Analysis } from '../audio/analyze';
+import { analyze, segment, segmentRange, type Analysis } from '../audio/analyze';
 import { fileKey, openAudio, type Source } from '../audio/wav';
 import { Player, type Loaded } from '../audio/player';
 import { saveBlob } from '../audio/export';
 import { clipTo16k } from '../ai/audio';
-import { UNCERTAIN, alignTakes, cleanTranscript } from '../ai/align';
+import { UNCERTAIN, alignTakes, cleanTranscript, diagnose } from '../ai/align';
 import { LANGUAGES, MODELS, Transcriber, detectDevice } from '../ai/transcriber';
 import { clamp, fmtTime, stem, uid } from '../util';
 import {
+  JUNK,
   TRASH,
   byStart,
   derivedLines,
@@ -17,6 +18,7 @@ import {
   idbSet,
   laneClips,
   laneName,
+  laneSlot,
   lastProject,
   loadProject,
   loadSettings,
@@ -219,13 +221,13 @@ class Store {
     if (this.countsCache && this.countsCache.clips === p.clips) return this.countsCache.counts;
     const map = this.linesMap();
     const counts = new Map<number, number[]>();
-    const lanes = p.laneNames.length + 1;
+    const lanes = p.laneNames.length + 2;
     for (const c of p.clips) {
       const n = map.get(c.id);
       if (!n) continue;
       let row = counts.get(n);
       if (!row) counts.set(n, (row = new Array(lanes).fill(0)));
-      row[c.lane === TRASH ? lanes - 1 : c.lane]++;
+      row[laneSlot(p, c.lane)]++;
     }
     this.countsCache = { clips: p.clips, counts };
     return counts;
@@ -320,6 +322,9 @@ class Store {
       s.cursor = first?.id ?? null;
       s.pos = first?.start ?? 0;
       this.restoreCursor();
+      if (existing && existing.clips.some((c) => c.text !== undefined) && !existing.clips.some((c) => c.conf !== undefined) && this.mine().length) {
+        this.realign(); // transcribed earlier, but the matching never landed
+      }
       if (existing) this.toast(`Resumed · ${existing.clips.length} clips`);
       else this.toast(`${s.project.clips.length} takes found`);
     } catch (e) {
@@ -522,9 +527,10 @@ class Store {
   setLane(lane: number) {
     const p = this.state.project;
     if (!p) return;
-    const n = p.laneNames.length + 1; // + trash
+    const n = p.laneNames.length + 2; // + junk + trash
     lane = ((lane % n) + n) % n;
-    if (lane === p.laneNames.length) lane = TRASH;
+    if (lane === p.laneNames.length) lane = JUNK;
+    else if (lane === p.laneNames.length + 1) lane = TRASH;
     this.player.stop();
     this.state.playing = false;
     this.state.lane = lane;
@@ -709,7 +715,7 @@ class Store {
     const c = this.clip();
     const p = this.state.project;
     if (!c || !p) return;
-    if (c.lane === TRASH) return this.moveClip(0);
+    if (c.lane === TRASH || c.lane === JUNK) return this.moveClip(0); // rescue
     if (c.lane >= finalLane(p)) return this.toast('Already in Final');
     this.moveClip(c.lane + 1);
   }
@@ -718,7 +724,8 @@ class Store {
     const c = this.clip();
     if (!c) return;
     if (c.lane === TRASH) return this.toast('Already in Trash');
-    if (c.lane === 0) return this.moveClip(TRASH);
+    if (c.lane === JUNK) return this.moveClip(TRASH);
+    if (c.lane === 0) return this.moveClip(JUNK);
     this.moveClip(c.lane - 1);
   }
 
@@ -1043,6 +1050,34 @@ class Store {
     }
     const cancelled = s.ai.status !== 'running';
     this.applyTranscripts(texts, !cancelled);
+    if (!cancelled && s.settings.autoSplit) {
+      const pieces = this.splitMultiReads();
+      if (pieces.length) {
+        s.ai = { ...s.ai, status: 'running', message: `re-cut ${pieces.length} pieces · transcribing them`, done: 0, total: pieces.length, eta: null };
+        this.emit();
+        const more = new Map<string, string>();
+        try {
+          for (const c of pieces) {
+            if (s.ai.status !== 'running') break;
+            const audio = await clipTo16k(src, c.start, c.end);
+            let text = '';
+            try {
+              text = cleanTranscript(await this.asr.transcribe(audio, language));
+            } catch {
+              text = '';
+            }
+            more.set(c.id, text);
+            s.ai.done++;
+            s.ai.progress = s.ai.done / s.ai.total;
+            if (s.ai.done % 3 === 0) this.emit();
+          }
+        } catch {
+          /* cancelled */
+        }
+        for (const [k, v] of more) texts.set(k, v);
+        this.applyTranscripts(more, s.ai.status === 'running');
+      }
+    }
     if (cancelled) {
       s.ai = { ...s.ai, status: 'cancelled', message: `stopped · ${texts.size} takes transcribed, lines not re-matched` };
     } else {
@@ -1064,16 +1099,43 @@ class Store {
     const transcripts = order.map((c) => texts.get(c.id) ?? c.text ?? '');
     const al = alignTakes(transcripts, mine);
     const byId = new Map(order.map((c, i) => [c.id, al[i]]));
+    const lineText = new Map(mine.map((l) => [l.n, l.text]));
+    const autoJunk = this.state.settings.autoJunk;
+    // diagnose first, so a line's last remaining take is never junked automatically
+    const diag = new Map(order.map((c) => {
+      const a = byId.get(c.id)!;
+      return [c.id, diagnose(texts.get(c.id) ?? c.text ?? '', lineText.get(a.n) ?? '', a.score)];
+    }));
+    const keepers = new Map<number, number>();
+    for (const c of order) {
+      const a = byId.get(c.id)!;
+      if (diag.get(c.id)!.kind !== 'junk' && c.lane !== TRASH) keepers.set(a.n, (keepers.get(a.n) ?? 0) + 1);
+    }
     let uncertain = 0;
+    let junked = 0;
     this.commit((clips) =>
       clips.map((c) => {
         const a = byId.get(c.id);
         if (!a) return c;
-        if (a.confidence < UNCERTAIN) uncertain++;
-        return { ...c, text: texts.get(c.id) ?? c.text, line: a.n, conf: a.confidence };
+        const text = texts.get(c.id) ?? c.text ?? '';
+        const d = diag.get(c.id)!;
+        const next: Clip = { ...c, text, line: a.n, conf: a.confidence, kind: d.kind, reads: d.reads };
+        if (d.kind === 'junk' && autoJunk && c.lane === 0 && (keepers.get(a.n) ?? 0) > 0) {
+          next.lane = JUNK;
+          junked++;
+        } else if (a.confidence < UNCERTAIN && d.kind !== 'junk') uncertain++;
+        return next;
       }),
     );
     this.state.ai.uncertain = uncertain;
+    // the current take may have just left this lane
+    const cur = this.clip();
+    if (cur && cur.lane !== this.state.lane) {
+      const first = this.laneList()[0];
+      this.state.cursor = first?.id ?? null;
+      this.state.pos = first?.start ?? this.state.pos;
+    }
+    if (junked) this.toast(`${junked} empty takes moved to junk`);
   }
 
   /** Match stored transcripts to lines again, e.g. after changing the character or the script. */
@@ -1086,6 +1148,41 @@ class Store {
     if (!this.mine().length) return this.toast('paste the script first · t');
     this.applyTranscripts(texts, true);
     this.toast(`lines re-matched · ${this.state.ai.uncertain} uncertain`);
+  }
+
+  /** Re-cut takes that contain several reads, with a finer silence threshold. Returns the new pieces. */
+  splitMultiReads(): Clip[] {
+    const { project: p, analysis: an, source: src, settings } = this.state;
+    if (!p || !an || !src) return [];
+    const fine = { threshold: settings.threshold, minSilence: Math.min(0.3, settings.minSilence), margin: Math.min(0.1, settings.margin) };
+    const minLen = Math.round(0.35 * src.sampleRate);
+    const pieces: Clip[] = [];
+    const replaced = new Map<string, Clip[]>();
+    for (const c of p.clips) {
+      if (c.kind !== 'multi' || (c.reads ?? 0) < 2 || c.lane === TRASH) continue;
+      const parts = segmentRange(an, c.start, c.end, src.sampleRate, fine).filter(([s, e]) => e - s >= minLen);
+      if (parts.length < 2) continue;
+      // keep the first piece as the original clip so lane and history stay; the rest are new
+      const out = parts.map(([start, end], i) => ({
+        id: i === 0 ? c.id : uid(),
+        start,
+        end,
+        lane: c.lane,
+        line: c.line,
+        text: undefined,
+        conf: undefined,
+        kind: undefined,
+        reads: undefined,
+      })) as Clip[];
+      replaced.set(c.id, out);
+      pieces.push(...out);
+    }
+    if (!replaced.size) return [];
+    this.player.stop();
+    this.state.playing = false;
+    this.commit((clips) => clips.flatMap((c) => replaced.get(c.id) ?? [c]));
+    this.toast(`${replaced.size} takes with several reads re-cut into ${pieces.length}`);
+    return pieces;
   }
 
   cancelTranscribe() {
@@ -1101,7 +1198,7 @@ class Store {
     const list = this.laneList();
     const c = this.clip();
     const from = c ? list.findIndex((x) => x.id === c.id) : -1;
-    const isDoubtful = (x: Clip) => x.conf !== undefined && x.conf < UNCERTAIN;
+    const isDoubtful = (x: Clip) => x.conf !== undefined && x.conf < UNCERTAIN && x.kind !== 'junk';
     const next = list.slice(from + 1).find(isDoubtful) ?? list.slice(0, from + 1).find(isDoubtful);
     if (!next) return this.toast('no uncertain takes in this lane');
     this.gotoClip(next.id, { play: true });

@@ -140,6 +140,26 @@ function SettingsModal() {
         </div>
       </div>
 
+      <h3>transcription</h3>
+      <div class="row">
+        <label>
+          empty takes go to junk
+          <small>breaths, slates and false starts with no words move to the junk lane for a quick review.</small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.autoJunk} onChange={(e) => s.updateSettings({ autoJunk: (e.target as HTMLInputElement).checked })} />
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          re-cut takes with several reads
+          <small>a take that repeats its line is cut at the pauses inside it and the pieces transcribed.</small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.autoSplit} onChange={(e) => s.updateSettings({ autoSplit: (e.target as HTMLInputElement).checked })} />
+        </div>
+      </div>
+
       <h3>editing</h3>
       <div class="row">
         <label>
@@ -310,6 +330,7 @@ function ExportModal() {
             {p.laneNames.map((n, i) => (
               <option value={i}>{n.toLowerCase()}</option>
             ))}
+            <option value={-2}>junk</option>
             <option value={TRASH}>trash</option>
           </select>
         </div>
@@ -445,6 +466,7 @@ function HelpModal() {
     ['in line mode: previous / next line', ['shift ↑', 'shift ↓']],
     ['transcribe takes and match lines', ['w']],
     ['next doubtful line match', ['u']],
+    ['junk lane: rescue / confirm trash', ['enter', '⌫']],
     ['edit script', ['t']],
     ['switch lane', ['tab', 'shift tab']],
     ['export', ['e']],
@@ -495,7 +517,8 @@ function TranscribeModal() {
       <h2>transcribe</h2>
       <p class="lead">
         whisper runs on your gpu, inside this page. the model downloads once ({model.size}) and is cached; your audio never leaves the
-        machine. each take is matched to one of your lines afterwards.
+        machine. afterwards every take is matched to one of your lines, empty takes go to the junk lane, and takes with several reads are
+        re-cut.
       </p>
 
       <div class="row">

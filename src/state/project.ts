@@ -1,6 +1,7 @@
 import type { DetectParams } from '../audio/analyze';
 
 export const TRASH = -1;
+export const JUNK = -2; // auto-detected non-takes, waiting for a look
 
 export interface Clip {
   id: string;
@@ -10,6 +11,8 @@ export interface Clip {
   line?: number; // explicit script line; unset clips inherit from the previous clip
   text?: string; // transcript, when transcribed
   conf?: number; // 0..1 confidence of the automatic line match
+  kind?: 'junk' | 'multi' | 'partial'; // what the transcript says this take is
+  reads?: number; // how many reads of the line the take seems to contain
 }
 
 export interface Settings extends DetectParams {
@@ -27,6 +30,8 @@ export interface Settings extends DetectParams {
   laneNames: string[];
   asrLanguage: 'spanish' | 'english' | 'auto';
   asrModel: 'base' | 'small';
+  autoJunk: boolean; // empty transcripts go to the junk lane
+  autoSplit: boolean; // takes with several reads are re-cut
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -47,6 +52,8 @@ export const DEFAULT_SETTINGS: Settings = {
   laneNames: ['Unsorted', 'Pass 1', 'Pass 2', 'Final'],
   asrLanguage: 'spanish',
   asrModel: 'small',
+  autoJunk: true,
+  autoSplit: true,
 };
 
 export interface Project {
@@ -63,7 +70,11 @@ export interface Project {
   savedAt: number;
 }
 
-export const laneName = (p: Project, lane: number) => (lane === TRASH ? 'Trash' : p.laneNames[lane] ?? `Lane ${lane}`);
+export const laneName = (p: Project, lane: number) =>
+  lane === TRASH ? 'Trash' : lane === JUNK ? 'Junk' : p.laneNames[lane] ?? `Lane ${lane}`;
+
+/** Index into laneCounts / per-line counts: named lanes, then junk, then trash. */
+export const laneSlot = (p: Project, lane: number) => (lane === TRASH ? p.laneNames.length + 1 : lane === JUNK ? p.laneNames.length : lane);
 export const finalLane = (p: Project) => p.laneNames.length - 1;
 
 export const byStart = (a: Clip, b: Clip) => a.start - b.start;
@@ -73,8 +84,8 @@ export function laneClips(p: Project, lane: number): Clip[] {
 }
 
 export function laneCounts(p: Project): number[] {
-  const counts = new Array(p.laneNames.length + 1).fill(0);
-  for (const c of p.clips) counts[c.lane === TRASH ? p.laneNames.length : c.lane]++;
+  const counts = new Array(p.laneNames.length + 2).fill(0);
+  for (const c of p.clips) counts[laneSlot(p, c.lane)]++;
   return counts;
 }
 

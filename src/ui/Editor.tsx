@@ -1,4 +1,4 @@
-import { TRASH, laneCounts } from '../state/project';
+import { JUNK, TRASH, laneCounts } from '../state/project';
 import { useStore } from '../state/store';
 import { fmtDur, fmtTime } from '../util';
 import { Toolbar } from './Toolbar';
@@ -48,8 +48,11 @@ export function Editor() {
               {name.toLowerCase()} <span class="n">{counts[i]}</span>
             </button>
           ))}
+          <button class={`lane junk${lane === JUNK ? ' active' : ''}`} onClick={() => s.setLane(JUNK)} title="auto-detected non-takes: enter rescues, backspace trashes">
+            junk <span class="n">{counts[p.laneNames.length]}</span>
+          </button>
           <button class={`lane trash${lane === TRASH ? ' active' : ''}`} onClick={() => s.setLane(TRASH)}>
-            trash <span class="n">{counts[p.laneNames.length]}</span>
+            trash <span class="n">{counts[p.laneNames.length + 1]}</span>
           </button>
         </nav>
         <div class="actions">
@@ -100,7 +103,8 @@ export function Editor() {
                 {clip.text !== undefined && (
                   <span class="tx" title="transcript">
                     {' '}
-                    {clip.conf !== undefined && clip.conf < 0.42 ? <b class="doubt">? </b> : null}“{clip.text || '…'}”
+                    {clip.kind === 'multi' ? <b class="doubt">×{clip.reads} reads </b> : clip.kind === 'partial' ? <b class="doubt">false start </b> : clip.kind === 'junk' ? <b class="doubt">junk </b> : clip.conf !== undefined && clip.conf < 0.36 ? <b class="doubt">? </b> : null}
+                    “{clip.text || '…'}”
                   </span>
                 )}
               </span>
@@ -117,6 +121,7 @@ export function Editor() {
         )}
         <span class={`badge${playing ? ' play' : ''}`}>{playing ? (slow ? `slow ${settings.slowRate}×` : 'playing') : 'stopped'}</span>
         {lineMode && <span class="badge on">by line</span>}
+        {lane === JUNK && <span class="badge on">enter rescues · ⌫ trashes</span>}
         <span class={`badge${settings.autoplay ? ' on' : ''}`}>autoplay</span>
         <span class={`badge${gain !== 0 ? ' on' : ''}`}>
           {gain >= 0 ? '+' : ''}

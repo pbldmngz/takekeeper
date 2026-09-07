@@ -160,6 +160,35 @@ export function alignTakes(transcripts: string[], lines: ScriptLine[]): Alignmen
 
 export const UNCERTAIN = 0.36;
 
+export interface Diagnosis {
+  kind?: 'junk' | 'multi' | 'partial';
+  reads: number;
+}
+
+/** What a transcript says about the take: nothing, one read, several, or a false start. */
+export function diagnose(transcript: string, line: string, score: number): Diagnosis {
+  const t = prepare(transcript);
+  if (!t.text) return { kind: 'junk', reads: 0 };
+  const words = t.text.split(' ').length;
+  if (words <= 2 && score < 0.35) return { kind: 'junk', reads: 0 };
+  const target = prepare(line);
+  const sentences = transcript
+    .split(/[.!?…]+/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map(prepare);
+  let reads = 0;
+  for (const s of sentences) if (s.text && similarity(s, target) >= 0.55) reads++;
+  if (reads >= 2) return { kind: 'multi', reads };
+  // false start: clearly shorter than the line, but matching its beginning
+  const lineWords = target.text.split(' ');
+  if (score < 0.6 && words < lineWords.length * 0.6 && words >= 1) {
+    const head = prepare(lineWords.slice(0, words + 1).join(' '));
+    if (similarity(t, head) >= 0.6) return { kind: 'partial', reads: 1 };
+  }
+  return { reads: Math.max(1, reads) };
+}
+
 /** Whisper's failure mode on breaths and slates: one token repeated forever. */
 export function cleanTranscript(raw: string): string {
   const text = raw.replace(/\s+/g, ' ').trim();

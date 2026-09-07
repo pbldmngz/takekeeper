@@ -111,7 +111,12 @@ export function ScriptPanel() {
               .filter(Boolean)
               .join(' ');
             return (
-              <div class={cls} data-n={l.n} onClick={() => (lineMode ? s.selectLine(l.n, { play: true }) : s.setLine(l.n))}>
+              <div
+                class={cls}
+                data-n={l.n}
+                title={ord ? 'click: only this line\'s takes · shift+click: give the current take this line' : undefined}
+                onClick={(e) => (ord ? (e.shiftKey ? s.setLine(l.n) : s.selectLine(l.n, { play: true })) : undefined)}
+              >
                 <span class="n">{ord ?? ''}</span>
                 <span class="t">
                   {!ord && l.character ? <b>{l.character.toLowerCase()}: </b> : null}
@@ -121,7 +126,7 @@ export function ScriptPanel() {
                   <span class="c" title="takes per lane">
                     {c
                       ? c
-                          .slice(0, -1)
+                          .slice(0, -2)
                           .map((k, i) => (k ? `${i === 0 ? '' : p.laneNames[i].toLowerCase().replace(/^pass /, 'p')}${k}` : ''))
                           .filter(Boolean)
                           .join(' ') || '·'

@@ -54,6 +54,15 @@ export async function analyze(
   return { db, frameLen, floor, peak };
 }
 
+/** Re-cut one range of the recording with its own (finer) parameters. */
+export function segmentRange(an: Analysis, start: number, end: number, sampleRate: number, p: DetectParams): Array<[number, number]> {
+  const f0 = Math.floor(start / an.frameLen);
+  const f1 = Math.ceil(end / an.frameLen);
+  const sub: Analysis = { ...an, db: an.db.subarray(f0, f1) };
+  const off = f0 * an.frameLen;
+  return segment(sub, end - off, sampleRate, p).map(([s, e]) => [Math.max(start, s + off), Math.min(end, e + off)]);
+}
+
 /** Turn frame levels into [start, end) sample ranges to keep. */
 export function segment(
   an: Analysis,

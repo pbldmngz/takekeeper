@@ -554,6 +554,9 @@ class Store {
     this.player.stop();
     this.state.playing = false;
     this.state.lane = lane;
+    // a lane is the top-level filter: changing it drops any line filter
+    this.state.lineMode = false;
+    this.state.lineFilter = null;
     const list = this.laneList(lane);
     const remembered = this.laneMemory.get(lane);
     const target = list.find((c) => c.id === remembered) ?? list[0] ?? null;

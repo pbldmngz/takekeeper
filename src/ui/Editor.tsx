@@ -79,7 +79,10 @@ export function Editor() {
           ? toast.text
           : ai.status === 'loading' || ai.status === 'running'
             ? `${ai.message} · ${ai.status === 'running' ? `${ai.done}/${ai.total}` : `${Math.round(ai.progress * 100)}%`}${ai.eta ? ` · ${Math.ceil(ai.eta / 60)} min left` : ''} · w to cancel`
-            : lineBanner ?? `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`}
+            : lineBanner ??
+              (lane === JUNK
+                ? `junk · ${list.length} clip${list.length === 1 ? '' : 's'} found empty by transcription · enter rescues to unsorted · backspace trashes`
+                : `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`)}
       </div>
 
       <Overview />

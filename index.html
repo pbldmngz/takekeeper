@@ -48,7 +48,7 @@
               { "@type": "Question", "name": "How does it find the takes?", "acceptedAnswer": { "@type": "Answer", "text": "It measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. Short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides of every take. Threshold, minimum silence and margin are adjustable and you can re-detect at any time." } },
               { "@type": "Question", "name": "What if a cut lands in the wrong place?", "acceptedAnswer": { "@type": "Answer", "text": "Every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour, which restores the original audio between them. Everything has undo." } },
               { "@type": "Question", "name": "How do I get the takes into FL Studio?", "acceptedAnswer": { "@type": "Answer", "text": "Export the Final lane as a folder of numbered WAV files. In FL Studio's Browser, sort the folder by name, select every file and hold Shift while dropping them onto the Playlist; they land on one track, in order. Turn on Ripple edit so deleting a clip closes the gap." } },
-              { "@type": "Question", "name": "Does it transcribe or match my script?", "acceptedAnswer": { "@type": "Answer", "text": "Not with AI. You paste your script and press L on the first take of each line while listening; every clip after it inherits that line until the next mark, and Shift+L jumps to a specific line number when you went back to redo something. Line numbers are included in the exported file names." } },
+              { "@type": "Question", "name": "Does it transcribe or match my script?", "acceptedAnswer": { "@type": "Answer", "text": "Not with AI, yet. Paste the whole script: rows like \"Name: text\" are spoken lines, everything else is direction, and you pick your character. Press L on the first take of each of your lines while listening; every clip after it inherits that line, [ and ] fix a take you went back for, and G shows one line's takes at a time with counts per lane so missing lines stand out. Line numbers are included in the exported file names." } },
               { "@type": "Question", "name": "Will my sorting survive closing the tab?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lanes, cuts, line marks and the script are saved in the browser as you work and restored when you open the same WAV. Press Ctrl+S to also save a small .takekeeper.json project file next to the recording; drop it on the landing page in any browser to pick up where you left off." } },
               { "@type": "Question", "name": "Which browsers work?", "acceptedAnswer": { "@type": "Answer", "text": "Chrome and Edge on desktop get everything, including saving straight into a folder and reopening your session with one click. Firefox works with a zip download instead. It is a keyboard tool, so phones and tablets are not the target." } }
             ]
@@ -129,8 +129,8 @@
             <p>replay slow, step by a frame, split, merge a miscut back together, set a new start or end. undo everything.</p>
           </div>
           <div class="card">
-            <h3>script line marks</h3>
-            <p>paste your script, press <kbd>l</kbd> when a new line starts; every take knows its line, so comparing the five reads of line 14 takes seconds.</p>
+            <h3>script, line by line</h3>
+            <p>paste the whole script, pick your character, mark lines as you listen. then walk your lines one at a time with the count per pass on each, and see at once which line has no take yet.</p>
           </div>
           <div class="card">
             <h3>private, bit-exact</h3>
@@ -157,7 +157,9 @@
             <tr><td><kbd>s</kbd> / <kbd>shift s</kbd></td><td>split at playhead, staying on the first half / the second</td></tr>
             <tr><td><kbd>m</kbd> / <kbd>shift m</kbd></td><td>merge with next / previous</td></tr>
             <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>set clip start / end at playhead</td></tr>
-            <tr><td><kbd>l</kbd> / <kbd>shift l</kbd></td><td>next script line starts here / jump to line</td></tr>
+            <tr><td><kbd>l</kbd> / <kbd>shift l</kbd></td><td>continue the script here / jump to a line number</td></tr>
+            <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>this clip: one line back / forward</td></tr>
+            <tr><td><kbd>g</kbd> · <kbd>shift ↑</kbd> <kbd>shift ↓</kbd></td><td>line mode: one line's takes at a time · previous / next line</td></tr>
             <tr><td><kbd>t</kbd></td><td>edit the script</td></tr>
             <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>switch lane</td></tr>
             <tr><td><kbd>ctrl z</kbd> / <kbd>ctrl shift z</kbd></td><td>undo / redo</td></tr>
@@ -196,7 +198,7 @@
         </details>
         <details>
           <summary>does it transcribe or match my script?</summary>
-          <p>not with ai. paste your script, press <kbd>l</kbd> on the first take of each line while listening; every clip after it inherits that line until the next mark, and <kbd>shift l</kbd> jumps to a line number when you went back to redo something. line numbers go into the exported file names.</p>
+          <p>not with ai, yet. paste the whole script: <b>name: text</b> rows are spoken lines, everything else is direction, and you pick your character. press <kbd>l</kbd> on the first take of each of your lines while listening; every clip after it inherits that line, <kbd>[</kbd> and <kbd>]</kbd> fix a take you went back for, and <kbd>g</kbd> shows one line's takes at a time with counts per lane, so missing lines stand out. line numbers go into the exported file names.</p>
         </details>
         <details>
           <summary>which browsers work?</summary>

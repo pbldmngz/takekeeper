@@ -17,12 +17,14 @@ import {
   lastProject,
   loadProject,
   loadSettings,
+  myLines,
   parseProjectFile,
+  parseScript,
   projectFileText,
   saveProject,
   saveSettings,
-  scriptLines,
   type Clip,
+  type ScriptLine,
   type Project,
   type Settings,
 } from './project';
@@ -48,6 +50,9 @@ export interface AppState {
   toast: { text: string; n: number } | null;
   scriptEditing: boolean;
   unsaved: number; // edits since the project was last saved to a file
+  lineMode: boolean; // the lane is filtered to one script line
+  lineFilter: number | null; // that line (global n)
+  showContext: boolean; // script panel shows other characters and directions too
 }
 
 const MAX_UNDO = 300;
@@ -72,6 +77,9 @@ class Store {
     toast: null,
     scriptEditing: false,
     unsaved: 0,
+    lineMode: false,
+    lineFilter: null,
+    showContext: false,
   };
 
   player = new Player();
@@ -86,6 +94,8 @@ class Store {
   private toastN = 0;
   private playToken = 0;
   private handle: FileSystemFileHandle | null = null;
+  private linesCache: { clips: Clip[]; map: Map<string, number> } | null = null;
+  private countsCache: { clips: Clip[]; counts: Map<number, number[]> } | null = null;
 
   constructor() {
     this.player.onEnded = () => this.onPlaybackEnded();
@@ -128,7 +138,12 @@ class Store {
   }
 
   laneList(lane = this.state.lane): Clip[] {
-    return this.state.project ? laneClips(this.state.project, lane) : [];
+    const p = this.state.project;
+    if (!p) return [];
+    const all = laneClips(p, lane);
+    if (!this.state.lineMode || this.state.lineFilter === null) return all;
+    const map = this.linesMap();
+    return all.filter((c) => map.get(c.id) === this.state.lineFilter);
   }
 
   laneIndexOf(clip: Clip): number {
@@ -146,13 +161,58 @@ class Store {
     return this.state.playing ? this.player.position() : this.state.pos;
   }
 
+  private linesMap(): Map<string, number> {
+    const p = this.state.project!;
+    if (!this.linesCache || this.linesCache.clips !== p.clips) this.linesCache = { clips: p.clips, map: derivedLines(p) };
+    return this.linesCache.map;
+  }
+
   lineOf(clip: Clip): number | undefined {
-    return this.state.project ? derivedLines(this.state.project).get(clip.id) : undefined;
+    return this.state.project ? this.linesMap().get(clip.id) : undefined;
+  }
+
+  /** Parsed script rows. */
+  script(): ScriptLine[] {
+    return this.state.project ? parseScript(this.state.project.script) : [];
+  }
+
+  /** The rows that count as the user's lines. */
+  mine(): ScriptLine[] {
+    return this.state.project ? myLines(this.script(), this.state.project.character) : [];
+  }
+
+  /** 1-based position of a script row among the user's lines. */
+  ordinal(n: number | undefined): number | undefined {
+    if (!n) return undefined;
+    const i = this.mine().findIndex((l) => l.n === n);
+    return i < 0 ? undefined : i + 1;
+  }
+
+  globalOf(ordinal: number): number | undefined {
+    return this.mine()[ordinal - 1]?.n;
   }
 
   lineText(n: number | undefined): string {
-    if (!n || !this.state.project) return '';
-    return scriptLines(this.state.project.script)[n - 1] ?? '';
+    if (!n) return '';
+    return this.script()[n - 1]?.text ?? '';
+  }
+
+  /** Clips per lane for every script row: counts[n][laneIndex], trash last. */
+  lineCounts(): Map<number, number[]> {
+    const p = this.state.project!;
+    if (this.countsCache && this.countsCache.clips === p.clips) return this.countsCache.counts;
+    const map = this.linesMap();
+    const counts = new Map<number, number[]>();
+    const lanes = p.laneNames.length + 1;
+    for (const c of p.clips) {
+      const n = map.get(c.id);
+      if (!n) continue;
+      let row = counts.get(n);
+      if (!row) counts.set(n, (row = new Array(lanes).fill(0)));
+      row[c.lane === TRASH ? lanes - 1 : c.lane]++;
+    }
+    this.countsCache = { clips: p.clips, counts };
+    return counts;
   }
 
   laneName(lane: number) {
@@ -235,12 +295,15 @@ class Store {
       s.resumable = null;
       s.unsaved = 0;
       s.lane = 0;
+      s.lineMode = false;
+      s.lineFilter = null;
       s.phase = 'ready';
       s.progress = null;
       s.status = '';
       const first = this.laneList(0)[0] ?? s.project!.clips.sort(byStart)[0];
       s.cursor = first?.id ?? null;
       s.pos = first?.start ?? 0;
+      this.restoreCursor();
       if (existing) this.toast(`Resumed · ${existing.clips.length} clips`);
       else this.toast(`${s.project.clips.length} takes found`);
     } catch (e) {
@@ -329,6 +392,8 @@ class Store {
         s.project = p;
         saveProject(p);
         this.afterHistory(`project loaded · ${p.clips.length} clips`);
+        this.restoreCursor();
+        this.emit();
         return;
       }
       s.error = null;
@@ -344,6 +409,7 @@ class Store {
   async saveProjectFile() {
     const p = this.state.project;
     if (!p) return;
+    this.syncCursor();
     const blob = new Blob([projectFileText(p)], { type: 'application/json' });
     try {
       if (await saveBlob(blob, `${stem(p.name)}.takekeeper.json`)) {
@@ -363,10 +429,30 @@ class Store {
 
   // ---------- persistence / undo ----------
 
+  private syncCursor() {
+    const p = this.state.project;
+    if (p) p.cursor = { lane: this.state.lane, clip: this.state.cursor, pos: this.state.pos };
+  }
+
+  /** Put lane, clip and playhead back where the project last saw them. */
+  private restoreCursor() {
+    const p = this.state.project;
+    const cur = p?.cursor;
+    if (!p || !cur) return;
+    const clip = cur.clip ? p.clips.find((c) => c.id === cur.clip) : null;
+    if (!clip) return;
+    this.state.lane = clip.lane;
+    this.state.cursor = clip.id;
+    this.state.pos = clamp(cur.pos, ...this.viewRange(clip));
+    this.laneMemory.set(clip.lane, clip.id);
+  }
+
   private persist() {
     clearTimeout(this.saveTimer);
     this.saveTimer = window.setTimeout(() => {
-      if (this.state.project) saveProject(this.state.project);
+      if (!this.state.project) return;
+      this.syncCursor();
+      saveProject(this.state.project);
     }, 250);
   }
 
@@ -431,6 +517,7 @@ class Store {
     const target = list.find((c) => c.id === remembered) ?? list[0] ?? null;
     this.state.cursor = target?.id ?? null;
     this.state.pos = target?.start ?? 0;
+    this.persist();
     this.emit();
   }
 
@@ -442,6 +529,7 @@ class Store {
     this.state.cursor = id;
     this.state.pos = c.start;
     this.laneMemory.set(c.lane, id);
+    this.persist();
     if (opts.play) void this.playFrom(c.start, !!opts.slow);
     else {
       this.player.stop();
@@ -518,6 +606,7 @@ class Store {
       this.state.pos = this.player.position();
       this.player.stop();
       this.state.playing = false;
+      this.persist();
       this.emit();
     } else {
       const c = this.clip();
@@ -708,11 +797,98 @@ class Store {
 
   // ---------- script ----------
 
-  markLine() {
+  /** L: this clip starts the line after the furthest line reached before it. */
+  continueScript() {
+    const c = this.clip();
+    const p = this.state.project;
+    if (!c || !p) return;
+    const mine = this.mine();
+    if (!mine.length) return this.toast('no script yet · press t to paste one');
+    const map = this.linesMap();
+    let furthest = 0;
+    for (const x of p.clips) if (x.start < c.start) furthest = Math.max(furthest, map.get(x.id) ?? 0);
+    const next = mine.find((l) => l.n > furthest) ?? mine[mine.length - 1];
+    this.setLine(next.n);
+  }
+
+  /** [ and ]: move this clip's line one of the user's lines back or forward. */
+  stepLine(dir: 1 | -1) {
     const c = this.clip();
     if (!c) return;
-    const n = (this.lineOf(c) ?? 0) + 1;
+    const mine = this.mine();
+    if (!mine.length) return this.toast('no script yet · press t to paste one');
+    const cur = this.lineOf(c);
+    const i = cur ? mine.findIndex((l) => l.n === cur) : -1;
+    const j = i < 0 ? 0 : clamp(i + dir, 0, mine.length - 1);
+    if (j === i) return this.toast(dir > 0 ? 'last line' : 'first line');
+    this.setLine(mine[j].n);
+  }
+
+  gotoOrdinal(ordinal: number) {
+    if (ordinal <= 0) return this.setLine(0);
+    const n = this.globalOf(ordinal);
+    if (!n) return this.toast(`you only have ${this.mine().length} lines`);
     this.setLine(n);
+  }
+
+  setCharacter(name: string | null) {
+    const p = this.state.project;
+    if (!p) return;
+    p.character = name;
+    this.persist();
+    this.toast(name ? `playing ${name}` : 'all spoken lines');
+  }
+
+  toggleContext() {
+    this.state.showContext = !this.state.showContext;
+    this.emit();
+  }
+
+  // ---------- line mode ----------
+
+  toggleLineMode() {
+    const s = this.state;
+    if (!this.mine().length) return this.toast('no script yet · press t to paste one');
+    if (s.lineMode) {
+      s.lineMode = false;
+      s.lineFilter = null;
+      this.toast('all clips');
+      return this.emit();
+    }
+    const c = this.clip();
+    s.lineMode = true;
+    this.selectLine(c ? (this.lineOf(c) ?? this.mine()[0].n) : this.mine()[0].n, { keepCursor: true });
+  }
+
+  /** Show one script line's takes in the current lane. */
+  selectLine(n: number, opts: { keepCursor?: boolean; play?: boolean } = {}) {
+    const s = this.state;
+    s.lineMode = true;
+    s.lineFilter = n;
+    this.player.stop();
+    s.playing = false;
+    const list = this.laneList();
+    const cur = this.clip();
+    const keep = opts.keepCursor && cur && list.some((x) => x.id === cur.id);
+    const target = keep ? cur : list[0] ?? null;
+    s.cursor = target?.id ?? null;
+    s.pos = target?.start ?? s.pos;
+    const ord = this.ordinal(n);
+    const counts = this.lineCounts().get(n);
+    const here = list.length;
+    if (!here) this.toast(`line ${ord}: no takes in ${this.laneName(s.lane).toLowerCase()}${counts ? ` · ${counts.reduce((a, b) => a + b, 0)} in total` : ''}`);
+    else this.toast(`line ${ord} · ${here} take${here === 1 ? '' : 's'} here`);
+    if (opts.play && target) void this.playFrom(target.start, false);
+    this.emit();
+  }
+
+  /** Shift+↑/↓ in line mode: previous / next of the user's lines. */
+  moveLine(dir: 1 | -1) {
+    const mine = this.mine();
+    const i = mine.findIndex((l) => l.n === this.state.lineFilter);
+    const j = clamp((i < 0 ? 0 : i) + dir, 0, mine.length - 1);
+    if (j === i) return this.toast(dir > 0 ? 'last line' : 'first line');
+    this.selectLine(mine[j].n, { play: true });
   }
 
   setLine(n: number) {
@@ -724,7 +900,7 @@ class Store {
     }
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, line: n } : x)));
     const t = this.lineText(n);
-    this.toast(`Line ${n}${t ? ' · ' + t.slice(0, 48) : ''}`);
+    this.toast(`line ${this.ordinal(n) ?? n}${t ? ' · ' + t.slice(0, 56) : ''}`);
   }
 
   setScript(text: string) {

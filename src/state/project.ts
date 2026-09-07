@@ -51,6 +51,8 @@ export interface Project {
   clips: Clip[];
   laneNames: string[];
   script: string;
+  character?: string | null; // the user's character in the script, if it has any
+  cursor?: { lane: number; clip: string | null; pos: number }; // where you were
   detect: DetectParams;
   savedAt: number;
 }
@@ -81,11 +83,48 @@ export function derivedLines(p: Project): Map<string, number> {
   return out;
 }
 
-export const scriptLines = (text: string) =>
-  text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+export interface ScriptLine {
+  n: number; // 1-based position among the non-empty rows; what clips point at
+  character: string | null;
+  text: string; // spoken text without the name
+  raw: string;
+}
+
+// "Name: text", "Name (note): text", "Name : text". Up to three words, letters only.
+const CHAR_RE = /^([\p{Lu}][\p{L}\p{M}'’.\- ]{0,30}?)\s*(?:\(([^)]*)\))?\s*:\s*(\S.*)$/u;
+
+let scriptCache: { text: string; lines: ScriptLine[] } | null = null;
+
+/** Non-empty rows of the script; `Name: text` rows are spoken lines, the rest are directions. */
+export function parseScript(text: string): ScriptLine[] {
+  if (scriptCache && scriptCache.text === text) return scriptCache.lines;
+  const lines: ScriptLine[] = [];
+  let n = 0;
+  for (const row of text.split(/\r?\n/)) {
+    const raw = row.trim();
+    if (!raw) continue;
+    n++;
+    const m = CHAR_RE.exec(raw);
+    const name = m?.[1].trim();
+    if (m && name && name.split(/\s+/).length <= 3) lines.push({ n, character: name, text: m[3].trim(), raw });
+    else lines.push({ n, character: null, text: raw, raw });
+  }
+  scriptCache = { text, lines };
+  return lines;
+}
+
+export function characters(lines: ScriptLine[]): Array<{ name: string; count: number }> {
+  const counts = new Map<string, number>();
+  for (const l of lines) if (l.character) counts.set(l.character, (counts.get(l.character) ?? 0) + 1);
+  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+/** The user's lines: their character's; every spoken line if none is chosen; every row if the script has no characters. */
+export function myLines(lines: ScriptLine[], character: string | null | undefined): ScriptLine[] {
+  if (!lines.some((l) => l.character)) return lines;
+  if (!character) return lines.filter((l) => l.character);
+  return lines.filter((l) => l.character === character);
+}
 
 // ---- persistence (localStorage for JSON, IndexedDB for file handles) ----
 

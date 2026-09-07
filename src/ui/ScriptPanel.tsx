@@ -1,17 +1,25 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { scriptLines } from '../state/project';
+import { characters } from '../state/project';
 import { useStore } from '../state/store';
 
 export function ScriptPanel() {
   const s = useStore();
-  const { project: p, scriptEditing } = s.state;
+  const { project: p, scriptEditing, lineMode, lineFilter, showContext } = s.state;
   const ta = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   if (!p) return null;
-  const lines = scriptLines(p.script);
+
+  const all = s.script();
+  const mine = s.mine();
+  const chars = characters(all);
+  const hasChars = chars.length > 0;
   const clip = s.clip();
   const current = clip ? s.lineOf(clip) : undefined;
   const editing = scriptEditing;
+  const counts = s.lineCounts();
+  const ordinalOf = new Map(mine.map((l, i) => [l.n, i + 1]));
+  const shown = showContext ? all : mine;
+  const focusLine = lineMode ? lineFilter : current;
 
   useEffect(() => {
     if (editing) ta.current?.focus();
@@ -19,47 +27,105 @@ export function ScriptPanel() {
   }, [editing]);
 
   useEffect(() => {
-    if (!current || editing) return;
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-n="${current}"]`);
+    if (!focusLine || editing) return;
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-n="${focusLine}"]`);
     el?.scrollIntoView({ block: 'nearest' });
-  }, [current, editing]);
+  }, [focusLine, editing]);
 
   return (
     <aside class="script">
       <div class="head">
         <span>script</span>
-        {editing ? (
-          <button class="k" onClick={() => s.setScriptEditing(false)}>
-            done <kbd>esc</kbd>
-          </button>
-        ) : (
-          <button class="k" onClick={() => s.setScriptEditing(true)}>
-            edit <kbd>t</kbd>
-          </button>
-        )}
+        <div class="tools">
+          {!editing && hasChars && (
+            <select
+              class="who"
+              title="your character"
+              value={p.character ?? ''}
+              onChange={(e) => s.setCharacter((e.target as HTMLSelectElement).value || null)}
+            >
+              <option value="">all spoken</option>
+              {chars.map((c) => (
+                <option value={c.name}>
+                  {c.name.toLowerCase()} · {c.count}
+                </option>
+              ))}
+            </select>
+          )}
+          {!editing && hasChars && (
+            <button class={`k${showContext ? ' amber' : ''}`} onClick={() => s.toggleContext()} title="show every row, not only your lines">
+              cues
+            </button>
+          )}
+          {editing ? (
+            <button class="k" onClick={() => s.setScriptEditing(false)}>
+              done <kbd>esc</kbd>
+            </button>
+          ) : (
+            <button class="k" onClick={() => s.setScriptEditing(true)}>
+              edit <kbd>t</kbd>
+            </button>
+          )}
+        </div>
       </div>
       {editing ? (
         <textarea
           ref={ta}
-          placeholder={'paste your script here, one line per line.\n\nthen press l on the first take of each line while you listen - every clip after it inherits the line until the next mark. shift+l jumps to a specific line number.'}
+          placeholder={
+            'paste the whole script here.\n\nrows like "mart: text" are spoken lines and the names become characters you can pick; other rows are directions. no names at all? every row counts as yours.\n\nthen press l on the first take of each of your lines while you listen.'
+          }
           value={p.script}
           onInput={(e) => s.setScript((e.target as HTMLTextAreaElement).value)}
         />
-      ) : lines.length === 0 ? (
+      ) : all.length === 0 ? (
         <div class="placeholder">
-          no script yet. press <kbd>t</kbd> to paste one, one line per line.
+          no script yet. press <kbd>t</kbd> to paste one.
           <br />
           <br />
-          while listening, press <kbd>l</kbd> on the first take of each line; every clip after it inherits that line until the next mark.
+          rows like <b>mart: text</b> become your lines once you pick the character. while listening, press <kbd>l</kbd> on the first take of
+          each line; every clip after it inherits that line. <kbd>[</kbd> <kbd>]</kbd> fix a take you went back for.
         </div>
       ) : (
         <div class="lines" ref={listRef}>
-          {lines.map((text, i) => (
-            <div class={`line${current === i + 1 ? ' current' : ''}`} data-n={i + 1} onClick={() => s.setLine(i + 1)}>
-              <span class="n">{i + 1}</span>
-              <span>{text}</span>
+          {hasChars && !p.character && (
+            <div class="placeholder small">
+              pick your character above · until then every spoken line counts as yours
             </div>
-          ))}
+          )}
+          {shown.map((l) => {
+            const ord = ordinalOf.get(l.n);
+            const c = counts.get(l.n);
+            const total = c ? c.reduce((a, b) => a + b, 0) : 0;
+            const cls = [
+              'line',
+              ord ? '' : 'other',
+              current === l.n ? 'current' : '',
+              lineMode && lineFilter === l.n ? 'filter' : '',
+              ord && !total ? 'zero' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            return (
+              <div class={cls} data-n={l.n} onClick={() => (lineMode ? s.selectLine(l.n, { play: true }) : s.setLine(l.n))}>
+                <span class="n">{ord ?? ''}</span>
+                <span class="t">
+                  {!ord && l.character ? <b>{l.character.toLowerCase()}: </b> : null}
+                  {l.text}
+                </span>
+                {ord ? (
+                  <span class="c" title="takes per lane">
+                    {c
+                      ? c
+                          .slice(0, -1)
+                          .map((k, i) => (k ? `${i === 0 ? '' : p.laneNames[i].toLowerCase().replace(/^pass /, 'p')}${k}` : ''))
+                          .filter(Boolean)
+                          .join(' ') || '·'
+                      : '·'}
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       )}
     </aside>

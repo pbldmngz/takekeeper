@@ -9,7 +9,7 @@ import { ScriptPanel } from './ScriptPanel';
 
 export function Editor() {
   const s = useStore();
-  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved } = s.state;
+  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved, lineMode, lineFilter } = s.state;
   if (!p || !src) return null;
   const counts = laneCounts(p);
   const clip = s.clip();
@@ -17,6 +17,20 @@ export function Editor() {
   const idx = clip ? list.findIndex((c) => c.id === clip.id) : -1;
   const line = clip ? s.lineOf(clip) : undefined;
   const lineText = s.lineText(line);
+  const ord = s.ordinal(line);
+  const filterOrd = lineFilter ? s.ordinal(lineFilter) : undefined;
+  const filterCounts = lineFilter ? s.lineCounts().get(lineFilter) : undefined;
+  const lineBanner =
+    lineMode && lineFilter
+      ? `line ${filterOrd} of ${s.mine().length} · ${s.lineText(lineFilter).slice(0, 60)} · ` +
+        (filterCounts
+          ? p.laneNames
+              .map((n, i) => (filterCounts[i] ? `${n.toLowerCase()} ${filterCounts[i]}` : ''))
+              .filter(Boolean)
+              .join(' · ') || 'no takes'
+          : 'no takes') +
+        ' · shift ↑↓ changes line'
+      : null;
   const laneNow = s.laneName(lane).toLowerCase();
   const gain = settings.gainDb;
 
@@ -60,7 +74,7 @@ export function Editor() {
       <div class={`banner${toast ? '' : ' quiet'}`}>
         {toast
           ? toast.text
-          : `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`}
+          : lineBanner ?? `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`}
       </div>
 
       <Overview />
@@ -80,7 +94,7 @@ export function Editor() {
             <span class="mono">{fmtDur((clip.end - clip.start) / src.sampleRate)}</span>
             {line ? (
               <span class="line-text">
-                <b>line {line}</b> {lineText}
+                <b>line {ord ?? line}</b> {lineText}
               </span>
             ) : (
               <span class="line-text dim">
@@ -94,6 +108,7 @@ export function Editor() {
           </span>
         )}
         <span class={`badge${playing ? ' play' : ''}`}>{playing ? (slow ? `slow ${settings.slowRate}×` : 'playing') : 'stopped'}</span>
+        {lineMode && <span class="badge on">by line</span>}
         <span class={`badge${settings.autoplay ? ' on' : ''}`}>autoplay</span>
         <span class={`badge${gain !== 0 ? ' on' : ''}`}>
           {gain >= 0 ? '+' : ''}

@@ -29,7 +29,9 @@ Everything acts on the clip under the amber playhead.
 | `S` / `Shift+S` | Split at playhead, staying on the first half / the second (default is a setting) |
 | `M` / `Shift+M` | Merge with next / previous clip (restores the audio between them) |
 | `I` / `O` | Set clip start / end at playhead |
-| `L` / `Shift+L` | Next script line starts here / jump to line number |
+| `L` / `Shift+L` | Continue the script here / jump to a line number |
+| `[` / `]` | This clip: one line back / forward |
+| `G` · `Shift+↑` `Shift+↓` | Line mode: one line's takes at a time · previous / next line |
 | `T` | Edit the script |
 | `A` | Toggle autoplay |
 | `=` / `-` | Monitor gain up / down (listening only, never exported) |

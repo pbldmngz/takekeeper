@@ -24,7 +24,7 @@ const Sep = () => <span class="sep">|</span>;
 /** Every keyboard action, as a button. Same order and wording as the key reference. */
 export function Toolbar() {
   const s = useStore();
-  const { project: p, source: src, playing, settings } = s.state;
+  const { project: p, source: src, playing, settings, lineMode } = s.state;
   if (!p || !src) return null;
   const clip = s.clip();
   const none = !clip;
@@ -52,8 +52,13 @@ export function Toolbar() {
       <Tool k="⇧m" label="merge prev" title="merge with the previous clip" on={() => s.mergePrev()} off={none} />
       <Tool k="i" label="in" title="set clip start at the playhead" on={() => s.setIn()} off={none} />
       <Tool k="o" label="out" title="set clip end at the playhead" on={() => s.setOut()} off={none} />
-      <Tool k="l" label="line" title="next script line starts here" on={() => s.markLine()} off={none} />
+      <Tool k="l" label="line" title="continue the script: the line after the furthest one so far" on={() => s.continueScript()} off={none} />
+      <Tool k="[" label="" title="this clip: one line back" on={() => s.stepLine(-1)} off={none} />
+      <Tool k="]" label="line ±" title="this clip: one line forward" on={() => s.stepLine(1)} off={none} />
       <Tool k="⇧l" label="line №" title="jump to a line number" on={() => s.openModal('goto')} off={none} />
+      <Tool k="g" label={lineMode ? 'all clips' : 'by line'} title="line mode: one script line at a time" on={() => s.toggleLineMode()} />
+      {lineMode && <Tool k="⇧↑" label="" title="previous line" on={() => s.moveLine(-1)} />}
+      {lineMode && <Tool k="⇧↓" label="line" title="next line" on={() => s.moveLine(1)} />}
       <Sep />
       <Tool k="ctrl z" label="undo" on={() => s.undo()} />
       <Tool k="ctrl ⇧z" label="redo" on={() => s.redo()} />

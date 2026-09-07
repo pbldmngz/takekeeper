@@ -249,7 +249,7 @@ function ExportModal() {
   const clips = laneClips(p, lane);
   const total = clips.reduce((a, c) => a + (c.end - c.start), 0) / src.sampleRate;
   const fade = Math.round((s.state.settings.fadeMs / 1000) * src.sampleRate);
-  const lines = clips.map((c) => s.lineOf(c));
+  const lines = clips.map((c) => s.ordinal(s.lineOf(c)));
   const width = Math.max(2, String(clips.length).length);
   const slug = s.laneName(lane).toLowerCase().replace(/\s+/g, '-');
 
@@ -436,8 +436,11 @@ function HelpModal() {
     ['merge with next / previous', ['m', 'shift m']],
     ['set clip start / end here', ['i', 'o']],
     ['undo / redo', ['ctrl z', 'ctrl shift z']],
-    ['next script line starts here', ['l']],
+    ['continue the script: next line starts here', ['l']],
+    ['this clip: one line back / forward', ['[', ']']],
     ['jump to line number', ['shift', 'l']],
+    ['line mode: one line at a time', ['g']],
+    ['in line mode: previous / next line', ['shift ↑', 'shift ↓']],
     ['edit script', ['t']],
     ['switch lane', ['tab', 'shift tab']],
     ['export', ['e']],
@@ -473,19 +476,19 @@ function GotoModal() {
   const s = useStore();
   const ref = useRef<HTMLInputElement>(null);
   const clip = s.clip();
-  const [v, setV] = useState(String(clip ? s.lineOf(clip) ?? '' : ''));
+  const [v, setV] = useState(String(clip ? s.ordinal(s.lineOf(clip)) ?? '' : ''));
   useEffect(() => {
     ref.current?.focus();
     ref.current?.select();
   }, []);
   const apply = () => {
     const n = Number(v);
-    if (Number.isFinite(n)) s.setLine(Math.max(0, Math.floor(n)));
+    if (Number.isFinite(n)) s.gotoOrdinal(Math.max(0, Math.floor(n)));
     s.openModal(null);
   };
   return (
     <div class="modal narrow">
-      <h2>line number</h2>
+      <h2>your line number</h2>
       <p class="lead">this clip and the ones after it. 0 removes the mark.</p>
       <input
         ref={ref}

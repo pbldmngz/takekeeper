@@ -58,10 +58,18 @@ export function installKeys() {
         return;
       case 'ArrowUp':
         e.preventDefault();
+        if (e.shiftKey && s.lineMode) return store.moveLine(-1);
         return store.move(-1, { play: true, slow: s.settings.slowOnPrev });
       case 'ArrowDown':
         e.preventDefault();
+        if (e.shiftKey && s.lineMode) return store.moveLine(1);
         return store.move(1, { play: true });
+      case '[':
+        e.preventDefault();
+        return store.stepLine(-1);
+      case ']':
+        e.preventDefault();
+        return store.stepLine(1);
       case 'ArrowLeft':
         e.preventDefault();
         return store.step(-Math.max(1, step));
@@ -120,7 +128,10 @@ export function installKeys() {
         return store.setOut();
       case 'l':
         e.preventDefault();
-        return e.shiftKey ? store.openModal('goto') : store.markLine();
+        return e.shiftKey ? store.openModal('goto') : store.continueScript();
+      case 'g':
+        e.preventDefault();
+        return store.toggleLineMode();
       case 'a':
         e.preventDefault();
         return store.toggleAutoplay();

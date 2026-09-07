@@ -982,3 +982,57 @@ input[type='checkbox'] {
     grid-template-columns: 1fr;
   }
 }
+
+/* script panel: characters, counts, line mode ------------------------------ */
+
+.script .head .tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.script .who {
+  width: auto;
+  padding: 3px 6px;
+  font-size: 12px;
+  border-color: var(--rule);
+  background: var(--ink);
+  color: var(--amber);
+}
+.script .line {
+  grid-template-columns: 36px 1fr auto;
+}
+.script .line .t b {
+  color: var(--dim);
+  font-weight: 500;
+}
+.script .line .c {
+  color: var(--dim);
+  font-size: 11px;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.script .line.other {
+  color: var(--dim);
+  font-size: 12px;
+}
+.script .line.zero .n::after {
+  content: '·';
+  color: var(--coral);
+  margin-left: 3px;
+}
+.script .line.zero .c {
+  color: var(--coral);
+}
+.script .line.filter {
+  background: var(--cyan-dim);
+  border-left-color: var(--cyan);
+}
+.script .line.filter.current {
+  background: var(--amber-dim);
+  border-left-color: var(--amber);
+}
+.script .placeholder.small {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--amber);
+}

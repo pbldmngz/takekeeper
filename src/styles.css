@@ -641,7 +641,7 @@ footer.site {
 }
 .main {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr clamp(360px, 30vw, 520px);
   gap: 10px;
   min-height: 0;
   margin: 0 14px;
@@ -1010,6 +1010,8 @@ input[type='checkbox'] {
   font-size: 11px;
   white-space: nowrap;
   padding-top: 2px;
+  min-width: 52px;
+  text-align: right;
 }
 .script .line.other {
   color: var(--dim);

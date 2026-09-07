@@ -24,7 +24,7 @@ const Sep = () => <span class="sep">|</span>;
 /** Every keyboard action, as a button. Same order and wording as the key reference. */
 export function Toolbar() {
   const s = useStore();
-  const { project: p, source: src, playing, settings, lineMode } = s.state;
+  const { project: p, source: src, playing, settings, lineMode, loop } = s.state;
   if (!p || !src) return null;
   const clip = s.clip();
   const none = !clip;
@@ -66,6 +66,7 @@ export function Toolbar() {
       <Tool k="ctrl ⇧z" label="redo" on={() => s.redo()} />
       <Tool k="-" label="" title="monitor gain down" on={() => s.setGain(settings.gainDb - 3)} />
       <Tool k="=" label="gain" title="monitor gain up" on={() => s.setGain(settings.gainDb + 3)} />
+      <Tool k="r" label={loop ? 'loop on' : 'loop'} title="repeat the current take until turned off" on={() => s.toggleLoop()} off={none} amber={loop} />
       <Tool k="a" label={settings.autoplay ? 'autoplay on' : 'autoplay off'} title="toggle autoplay" on={() => s.toggleAutoplay()} />
       <Tool k="?" label="all keys" on={() => s.openModal('help')} />
     </div>

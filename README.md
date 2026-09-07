@@ -35,7 +35,7 @@ Everything acts on the clip under the amber playhead.
 | `W` / `U` | Transcribe takes with Whisper (in-browser, WebGPU) and match them to lines / next doubtful match |
 | Junk lane | Empty takes land here after transcription; `Enter` rescues, `Backspace` confirms. Takes with several reads are re-cut automatically |
 | `T` | Edit the script |
-| `A` | Toggle autoplay |
+| `A` / `R` | Toggle autoplay / loop the current take |
 | `=` / `-` | Monitor gain up / down (listening only, never exported) |
 | `Tab` / `Shift+Tab` | Switch lane |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |

@@ -61,6 +61,7 @@ export interface AppState {
   pos: number; // playhead, absolute frames (authoritative when not playing)
   playing: boolean;
   slow: boolean;
+  loop: boolean; // replay the current take until turned off
   modal: Modal;
   progress: number | null;
   status: string;
@@ -89,6 +90,7 @@ class Store {
     pos: 0,
     playing: false,
     slow: false,
+    loop: false,
     modal: null,
     progress: null,
     status: '',
@@ -690,6 +692,9 @@ class Store {
     this.state.playing = false;
     const endedAtClipEnd = c ? this.player.position() >= c.end - 1 : false;
     this.state.pos = c ? Math.min(this.player.position(), c.end) : 0;
+    if (c && endedAtClipEnd && this.state.loop && this.state.modal === null) {
+      return void this.playFrom(c.start, this.state.slow);
+    }
     if (c && endedAtClipEnd && this.state.settings.autoplay && this.state.modal === null) {
       const list = this.laneList();
       const i = list.findIndex((x) => x.id === c.id);
@@ -698,6 +703,16 @@ class Store {
       this.toast('End of lane');
     }
     this.emit();
+  }
+
+  toggleLoop() {
+    const s = this.state;
+    s.loop = !s.loop;
+    this.toast(s.loop ? 'loop on · this take repeats' : 'loop off');
+    if (s.loop && !s.playing) {
+      const c = this.clip();
+      if (c) void this.playFrom(c.start, false);
+    }
   }
 
   toggleAutoplay() {

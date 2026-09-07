@@ -450,6 +450,7 @@ function HelpModal() {
     ['one frame, precise / a tenth', ['shift', 'alt']],
     ['clip start / end', ['home', 'end']],
     ['toggle autoplay', ['a']],
+    ['loop the current take', ['r']],
     ['monitor gain up / down', ['=', '-']],
     ['promote to next lane', ['enter']],
     ['demote one lane', ['shift', 'enter']],

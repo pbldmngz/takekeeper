@@ -141,6 +141,9 @@ export function installKeys() {
       case 'a':
         e.preventDefault();
         return store.toggleAutoplay();
+      case 'r':
+        e.preventDefault();
+        return store.toggleLoop();
       case 'e':
         e.preventDefault();
         return store.openModal('export');

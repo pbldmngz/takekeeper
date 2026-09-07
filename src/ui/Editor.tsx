@@ -9,7 +9,7 @@ import { ScriptPanel } from './ScriptPanel';
 
 export function Editor() {
   const s = useStore();
-  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved, lineMode, lineFilter, ai } = s.state;
+  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved, lineMode, lineFilter, ai, loop } = s.state;
   if (!p || !src) return null;
   const counts = laneCounts(p);
   const clip = s.clip();
@@ -123,6 +123,7 @@ export function Editor() {
           </span>
         )}
         <span class={`badge${playing ? ' play' : ''}`}>{playing ? (slow ? `slow ${settings.slowRate}×` : 'playing') : 'stopped'}</span>
+        {loop && <span class="badge on">loop</span>}
         {lineMode && <span class="badge on">by line</span>}
         {lane === JUNK && <span class="badge on">enter rescues · ⌫ trashes</span>}
         <span class={`badge${settings.autoplay ? ' on' : ''}`}>autoplay</span>

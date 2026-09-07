@@ -32,6 +32,9 @@ export interface Settings extends DetectParams {
   asrModel: 'base' | 'small';
   autoJunk: boolean; // empty transcripts go to the junk lane
   autoSplit: boolean; // takes with several reads are re-cut
+  spacers: boolean; // export silent gap files between takes
+  gapClip: number; // seconds after every take
+  gapLine: number; // seconds when the next take is another line
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -54,6 +57,9 @@ export const DEFAULT_SETTINGS: Settings = {
   asrModel: 'small',
   autoJunk: true,
   autoSplit: true,
+  spacers: true,
+  gapClip: 1,
+  gapLine: 2,
 };
 
 export interface Project {

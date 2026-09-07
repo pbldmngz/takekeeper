@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { buildZip, canSaveFolder, clipBlob, mergedBlob, saveBlob, saveToFolder, type Entry } from '../audio/export';
+import { silenceBytes, wavHeader } from '../audio/wav';
 import { TRASH, finalLane, laneClips } from '../state/project';
 import { useStore } from '../state/store';
 import { MODELS, detectDevice } from '../ai/transcriber';
@@ -275,13 +276,33 @@ function ExportModal() {
   const width = Math.max(2, String(clips.length).length);
   const slug = s.laneName(lane).toLowerCase().replace(/\s+/g, '-');
 
+  const st = s.state.settings;
+  // silent gap after take i: longer when the next take is another line
+  const gapAfter = (i: number): number => {
+    if (!st.spacers || i >= clips.length - 1) return 0;
+    const a = lines[i];
+    const b = lines[i + 1];
+    return a && b && a !== b ? st.gapLine : st.gapClip;
+  };
+  const gaps = clips.reduce((n, _, i) => n + (gapAfter(i) > 0 ? 1 : 0), 0);
+  const gapSeconds = clips.reduce((n, _, i) => n + gapAfter(i), 0);
+
   const entries = async (onProgress: (p: number) => void): Promise<Entry[]> => {
     const out: Entry[] = [];
     for (let i = 0; i < clips.length; i++) {
       const c = clips[i];
       const ln = lines[i];
-      const name = `${prefix}_${pad(i + 1, width)}${ln ? `_line${pad(ln, 3)}` : ''}.wav`;
-      out.push({ name, blob: await clipBlob(src, c.start, c.end, fade) });
+      const gap = gapAfter(i);
+      // with spacers, "001a" is the take and "001b" the silence after it, so any sort by name keeps them together
+      const num = pad(i + 1, width) + (st.spacers ? 'a' : '');
+      out.push({ name: `${prefix}_${num}${ln ? `_line${pad(ln, 3)}` : ''}.wav`, blob: await clipBlob(src, c.start, c.end, fade) });
+      if (gap > 0) {
+        const frames = Math.round(gap * src.sampleRate);
+        out.push({
+          name: `${prefix}_${pad(i + 1, width)}b_gap${gap}s.wav`,
+          blob: new Blob([wavHeader(src, frames * src.blockAlign), silenceBytes(src, frames)], { type: 'audio/wav' }),
+        });
+      }
       onProgress((i + 1) / clips.length);
     }
     return out;
@@ -340,6 +361,7 @@ function ExportModal() {
           format
           <small>
             {clips.length} clips · {fmtDur(total)}
+            {st.spacers && gaps > 0 && mode !== 'merged' ? ` · ${gaps} gap${gaps === 1 ? '' : 's'} · ${fmtDur(gapSeconds)} of silence` : ''}
           </small>
         </label>
         <div class="val">
@@ -392,6 +414,46 @@ function ExportModal() {
           </button>
         </div>
       </div>
+
+      {mode !== 'merged' && (
+        <>
+          <div class="row">
+            <label>
+              silent gaps between takes
+              <small>tiny silent wav files, numbered to sort in place, so the folder drops into the daw with the spacing already there.</small>
+            </label>
+            <div class="val">
+              <input type="checkbox" checked={st.spacers} onChange={(e) => s.updateSettings({ spacers: (e.target as HTMLInputElement).checked })} />
+            </div>
+          </div>
+          {st.spacers && (
+            <div class="row">
+              <label>
+                after every take / between lines
+                <small>seconds. the longer gap is used when the next take is a different line.</small>
+              </label>
+              <div class="val">
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  step={0.5}
+                  value={st.gapClip}
+                  onChange={(e) => s.updateSettings({ gapClip: Math.max(0, Number((e.target as HTMLInputElement).value) || 0) })}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  step={0.5}
+                  value={st.gapLine}
+                  onChange={(e) => s.updateSettings({ gapLine: Math.max(0, Number((e.target as HTMLInputElement).value) || 0) })}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <h3>into fl studio</h3>
       <div class="tips">

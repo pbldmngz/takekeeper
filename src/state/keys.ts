@@ -104,7 +104,7 @@ export function installKeys() {
     switch (e.key.toLowerCase()) {
       case 's':
         e.preventDefault();
-        return store.split();
+        return store.split(e.shiftKey);
       case 'm':
         e.preventDefault();
         return e.shiftKey ? store.mergePrev() : store.mergeNext();

@@ -563,7 +563,8 @@ class Store {
 
   // ---------- editing ----------
 
-  split() {
+  /** Split at the playhead. `other` flips which half the cursor lands on for this one split. */
+  split(other = false) {
     const c = this.clip();
     if (!c) return;
     const pos = Math.round(this.playhead());
@@ -572,10 +573,11 @@ class Store {
     this.state.playing = false;
     const b: Clip = { id: uid(), start: pos, end: c.end, lane: c.lane };
     this.commit((clips) => clips.flatMap((x) => (x.id === c.id ? [{ ...x, end: pos }, b] : [x])));
-    // stay on the first half, playhead back at its start so space reviews it
-    this.state.cursor = c.id;
-    this.state.pos = c.start;
-    this.laneMemory.set(c.lane, c.id);
+    // land on whichever half the setting says, playhead at its start so space reviews it
+    const stay = this.state.settings.splitStaysOnFirst !== other;
+    this.state.cursor = stay ? c.id : b.id;
+    this.state.pos = stay ? c.start : pos;
+    this.laneMemory.set(c.lane, this.state.cursor);
     this.toast('Split');
     this.emit();
   }

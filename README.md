@@ -26,7 +26,7 @@ Everything acts on the clip under the amber playhead.
 | `Enter` / `Shift+Enter` | Promote to next lane / demote |
 | `Backspace` | Trash (the lane closes up) |
 | `1`–`9`, `0` | Send clip straight to lane N / back to Unsorted |
-| `S` | Split at playhead |
+| `S` / `Shift+S` | Split at playhead, staying on the first half / the second (default is a setting) |
 | `M` / `Shift+M` | Merge with next / previous clip (restores the audio between them) |
 | `I` / `O` | Set clip start / end at playhead |
 | `L` / `Shift+L` | Next script line starts here / jump to line number |

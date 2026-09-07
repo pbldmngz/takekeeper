@@ -162,6 +162,22 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
+          split stays on the first half
+          <small>
+            after <kbd>s</kbd>, review the part before the cut. off moves on to the part after it. <kbd>shift s</kbd> does the opposite of
+            this setting for one split.
+          </small>
+        </label>
+        <div class="val">
+          <input
+            type="checkbox"
+            checked={st.splitStaysOnFirst}
+            onChange={(e) => s.updateSettings({ splitStaysOnFirst: (e.target as HTMLInputElement).checked })}
+          />
+        </div>
+      </div>
+      <div class="row">
+        <label>
           context around a clip
           <small>audio shown before and after, so you can extend a cut.</small>
         </label>
@@ -400,7 +416,7 @@ function HelpModal() {
     ['demote one lane', ['shift', 'enter']],
     ['trash', ['⌫']],
     ['send to lane n', ['0', '…', '9']],
-    ['split at playhead', ['s']],
+    ['split at playhead / land on the other half', ['s', 'shift s']],
     ['merge with next / previous', ['m', 'shift m']],
     ['set clip start / end here', ['i', 'o']],
     ['undo / redo', ['ctrl z', 'ctrl shift z']],

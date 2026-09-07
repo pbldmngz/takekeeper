@@ -47,6 +47,7 @@ export function Toolbar() {
       ))}
       <Sep />
       <Tool k="s" label="split" title="split at the playhead" on={() => s.split()} off={none} />
+      <Tool k="⇧s" label="" title="split, land on the other half" on={() => s.split(true)} off={none} />
       <Tool k="m" label="merge" title="merge with the next clip" on={() => s.mergeNext()} off={none} />
       <Tool k="⇧m" label="merge prev" title="merge with the previous clip" on={() => s.mergePrev()} off={none} />
       <Tool k="i" label="in" title="set clip start at the playhead" on={() => s.setIn()} off={none} />

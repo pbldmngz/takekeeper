@@ -16,6 +16,7 @@ export interface Settings extends DetectParams {
   contextSeconds: number; // audio shown around a clip for trimming
   stepMs: number; // one "frame" of ←/→
   fastArrows: boolean; // plain ←/→ move 10 frames; shift steps one frame
+  splitStaysOnFirst: boolean; // after a split, keep the cursor on the first half
   slowRate: number;
   slowOnPrev: boolean; // ↑ replays the previous clip in slow motion
   gainDb: number; // monitoring boost, never exported
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contextSeconds: 1.5,
   stepMs: 15,
   fastArrows: true,
+  splitStaysOnFirst: true,
   slowRate: 0.5,
   slowOnPrev: false,
   gainDb: 0,

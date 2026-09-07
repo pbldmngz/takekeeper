@@ -1313,7 +1313,7 @@ class Store {
     const p = this.state.project;
     if (!p) return;
     const texts = new Map<string, string>();
-    for (const c of p.clips) if (c.text !== undefined) texts.set(c.id, c.text);
+    for (const c of p.clips) if (c.text !== undefined) texts.set(c.id, cleanTranscript(c.text)); // older transcripts get today's cleaning
     if (!texts.size) return this.toast('nothing transcribed yet · w');
     if (!this.mine().length) return this.toast('paste the script first · t');
     this.applyTranscripts(texts, true);

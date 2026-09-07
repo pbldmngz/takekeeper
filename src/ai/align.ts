@@ -263,7 +263,13 @@ export function groupWords(words: Array<{ text: string; start: number | null; en
 
 /** Whisper's failure mode on breaths and slates: one token repeated forever. */
 export function cleanTranscript(raw: string): string {
-  const text = raw.replace(/\s+/g, ' ').trim();
+  // a held vowel or a stuck decoder: one "word" made of one or two letters repeated ("aaaaaaa…")
+  const text = raw
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter((w) => !(w.length > 12 && new Set(normalize(w)).size <= 2))
+    .join(' ')
+    .trim();
   const words = normalize(text).split(' ').filter(Boolean);
   if (!words.length) return ''; // punctuation only: "¡¡¡¡¡¡"
   if (words.length >= 8) {

@@ -236,6 +236,7 @@ hr {
   display: flex;
   align-items: center;
   gap: 18px;
+  min-width: 0;
   height: 54px;
   padding: 0 18px;
   border-bottom: 1px solid var(--rule);
@@ -562,6 +563,8 @@ footer.site {
   display: grid;
   grid-template-rows: auto auto auto 1fr auto auto;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden; /* nothing inside may widen the page: long words clip, they never scroll it */
 }
 .editor .top {
   margin: 0;
@@ -752,6 +755,8 @@ footer.site {
   align-items: center;
   gap: 16px;
   margin: 0 14px;
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: 12.5px;
   min-height: 22px;
@@ -769,7 +774,10 @@ footer.site {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
+  flex: 1 1 0;
+}
+.info .badge {
+  flex-shrink: 0;
 }
 .badge {
   color: var(--dim);

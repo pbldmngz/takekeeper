@@ -172,25 +172,49 @@ export function diagnose(transcript: string, line: string, score: number): Diagn
   const words = t.text.split(' ').length;
   if (words <= 2 && score < 0.35) return { kind: 'junk', reads: 0 };
   const target = prepare(line);
+  const lineWords = target.text.split(' ');
   const sentences = transcript
     .split(/[.!?…]+/)
     .map((x) => x.trim())
     .filter(Boolean)
-    .map(prepare);
+    .map(prepare)
+    .filter((x) => x.text);
+  const lineSentences = line.split(/[.!?…]+/).filter((x) => x.trim()).length;
+
+  if (lineSentences > 1) {
+    // a line with several sentences: its own sentences look like fragments, so only an
+    // exact repeat means another read
+    const seen = new Map<string, number>();
+    let dup = 1;
+    for (const x of sentences) {
+      const n = (seen.get(x.text) ?? 0) + 1;
+      seen.set(x.text, n);
+      dup = Math.max(dup, n);
+    }
+    if (dup >= 2) return { kind: 'multi', reads: dup };
+    if (score < 0.6 && words < lineWords.length * 0.6) return { kind: 'partial', reads: 1 };
+    return { reads: 1 };
+  }
+
   let reads = 0;
-  for (const s of sentences) if (s.text && similarity(s, target) >= 0.55) reads++;
+  for (const x of sentences) if (similarity(x, target) >= 0.55) reads++;
   if (reads >= 2) return { kind: 'multi', reads };
-  // a false start followed by the real read in the same breath: cut it like a multi
+  // false start followed by the real read in the same breath: the last sentence must carry
+  // the whole line by itself, and an earlier one must be a short prefix of it
   if (reads === 1 && sentences.length >= 2) {
-    const lineWords = target.text.split(' ');
-    for (const s of sentences) {
-      const n = s.text.split(' ').length;
-      if (n >= lineWords.length * 0.6 || similarity(s, target) >= 0.55) continue;
-      if (similarity(s, prepare(lineWords.slice(0, n + 1).join(' '))) >= 0.6) return { kind: 'multi', reads: sentences.length };
+    const last = sentences[sentences.length - 1];
+    const lastWords = new Set(last.text.split(' '));
+    const coverage = lineWords.filter((w) => lastWords.has(w)).length / lineWords.length;
+    if (coverage >= 0.8) {
+      for (const x of sentences.slice(0, -1)) {
+        const n = x.text.split(' ').length;
+        if (n < lineWords.length * 0.6 && similarity(x, prepare(lineWords.slice(0, n + 1).join(' '))) >= 0.6) {
+          return { kind: 'multi', reads: sentences.length };
+        }
+      }
     }
   }
-  // false start: clearly shorter than the line, but matching its beginning
-  const lineWords = target.text.split(' ');
+  // false start on its own: clearly shorter than the line, but matching its beginning
   if (score < 0.6 && words < lineWords.length * 0.6 && words >= 1) {
     const head = prepare(lineWords.slice(0, words + 1).join(' '));
     if (similarity(t, head) >= 0.6) return { kind: 'partial', reads: 1 };

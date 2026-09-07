@@ -556,10 +556,11 @@ class Store {
     this.player.stop();
     this.state.playing = false;
     this.state.lane = lane;
-    // a lane is the top-level filter: changing it drops any line filter
-    this.state.lineMode = false;
-    this.state.lineFilter = null;
+    // the line filter, if any, follows you across lanes so a line can be checked pass by pass
     const list = this.laneList(lane);
+    if (this.state.lineMode && this.state.lineFilter !== null && !list.length) {
+      this.toast(`no takes of line ${this.ordinal(this.state.lineFilter)} in ${laneName(p, lane).toLowerCase()} · g shows the whole lane`);
+    }
     const remembered = this.laneMemory.get(lane);
     const target = list.find((c) => c.id === remembered) ?? list[0] ?? null;
     this.state.cursor = target?.id ?? null;

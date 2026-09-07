@@ -734,7 +734,9 @@ class Store {
     this.player.stop();
     this.state.playing = false;
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, lane: target } : x)));
-    this.toast(`→ ${laneName(p, target)}`);
+    const rescued = (c.lane === JUNK || c.lane === TRASH) && target !== TRASH && target !== JUNK;
+    const ord = rescued ? this.ordinal(this.lineOf(c)) : undefined;
+    this.toast(`→ ${laneName(p, target)}${ord ? ` · line ${ord} · ${this.lineText(this.lineOf(c)).slice(0, 40)}` : ''}`);
     const after = this.laneList();
     const next = after[i] ?? null;
     if (next) this.gotoClip(next.id, { play: wasPlaying });

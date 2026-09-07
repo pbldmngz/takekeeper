@@ -114,8 +114,19 @@ export function ScriptPanel() {
               <div
                 class={cls}
                 data-n={l.n}
-                title={ord ? 'click: only this line\'s takes · shift+click: give the current take this line' : undefined}
-                onClick={(e) => (ord ? (e.shiftKey ? s.setLine(l.n) : s.selectLine(l.n, { play: true })) : undefined)}
+                title={
+                  ord
+                    ? lineMode && lineFilter === l.n
+                      ? 'click: back to the whole lane'
+                      : "click: only this line's takes · shift+click: give the current take this line"
+                    : undefined
+                }
+                onClick={(e) => {
+                  if (!ord) return;
+                  if (e.shiftKey) return s.setLine(l.n);
+                  if (lineMode && lineFilter === l.n) return s.toggleLineMode(); // the selected line again: back to the whole lane
+                  s.selectLine(l.n, { play: true });
+                }}
               >
                 <span class="n">{ord ?? ''}</span>
                 <span class="t">

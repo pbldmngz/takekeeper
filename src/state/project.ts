@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fadeMs: 5,
   frameMs: 20,
   contextSeconds: 1.5,
-  stepMs: 10,
+  stepMs: 15,
   slowRate: 0.5,
   slowOnPrev: false,
   gainDb: 0,
@@ -94,7 +94,11 @@ const K = {
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(K.settings);
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    if (raw) {
+      const stored = JSON.parse(raw) as Partial<Settings>;
+      if (stored.stepMs === 10) stored.stepMs = 15; // old default, bumped 50%
+      return { ...DEFAULT_SETTINGS, ...stored };
+    }
   } catch {
     /* ignore */
   }

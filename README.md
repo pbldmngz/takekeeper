@@ -21,7 +21,7 @@ Everything acts on the clip under the amber playhead.
 | --- | --- |
 | `Space` / `Shift+Space` | Play–pause / play clip from its start in slow motion |
 | `↑` / `↓` | Previous / next clip (slow-motion on `↑` is a setting, off by default) |
-| `←` `→` | Step one frame (10 ms) · `Shift` ×10 · `Alt` ÷10 |
+| `←` `→` | Step one frame (15 ms) · `Shift` ×10 · `Alt` ÷10 |
 | `Home` / `End` | Clip start / end |
 | `Enter` / `Shift+Enter` | Promote to next lane / demote |
 | `Backspace` | Trash (the lane closes up) |

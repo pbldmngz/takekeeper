@@ -57,6 +57,8 @@ export function Toolbar() {
       <Tool k="]" label="line ±" title="this clip: one line forward" on={() => s.stepLine(1)} off={none} />
       <Tool k="⇧l" label="line №" title="jump to a line number" on={() => s.openModal('goto')} off={none} />
       <Tool k="g" label={lineMode ? 'all clips' : 'by line'} title="line mode: one script line at a time" on={() => s.toggleLineMode()} />
+      <Tool k="w" label="transcribe" title="whisper in the browser: transcribe takes and match them to lines" on={() => s.openModal('transcribe')} />
+      <Tool k="u" label="" title="next take with a doubtful line match" on={() => s.nextUncertain()} />
       {lineMode && <Tool k="⇧↑" label="" title="previous line" on={() => s.moveLine(-1)} />}
       {lineMode && <Tool k="⇧↓" label="line" title="next line" on={() => s.moveLine(1)} />}
       <Sep />

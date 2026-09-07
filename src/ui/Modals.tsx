@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { buildZip, canSaveFolder, clipBlob, mergedBlob, saveBlob, saveToFolder, type Entry } from '../audio/export';
 import { TRASH, finalLane, laneClips } from '../state/project';
 import { useStore } from '../state/store';
+import { MODELS, detectDevice } from '../ai/transcriber';
 import { fmtDur, pad, stem } from '../util';
 
 export function Modals() {
@@ -14,6 +15,7 @@ export function Modals() {
       {m === 'export' && <ExportModal />}
       {m === 'help' && <HelpModal />}
       {m === 'goto' && <GotoModal />}
+      {m === 'transcribe' && <TranscribeModal />}
     </div>
   );
 }
@@ -441,6 +443,8 @@ function HelpModal() {
     ['jump to line number', ['shift', 'l']],
     ['line mode: one line at a time', ['g']],
     ['in line mode: previous / next line', ['shift ↑', 'shift ↓']],
+    ['transcribe takes and match lines', ['w']],
+    ['next doubtful line match', ['u']],
     ['edit script', ['t']],
     ['switch lane', ['tab', 'shift tab']],
     ['export', ['e']],
@@ -465,6 +469,117 @@ function HelpModal() {
         <button class="k" onClick={() => s.openModal(null)}>
           close <kbd>esc</kbd>
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- transcribe
+
+function TranscribeModal() {
+  const s = useStore();
+  const st = s.state.settings;
+  const ai = s.state.ai;
+  const p = s.state.project!;
+  const [device, setDevice] = useState<string>('checking…');
+  useEffect(() => {
+    void detectDevice().then((d) => setDevice(d.label));
+  }, []);
+  const busy = ai.status === 'loading' || ai.status === 'running';
+  const withText = p.clips.filter((c) => c.text !== undefined).length;
+  const hasScript = s.mine().length > 0;
+  const model = MODELS[st.asrModel];
+
+  return (
+    <div class="modal">
+      <h2>transcribe</h2>
+      <p class="lead">
+        whisper runs on your gpu, inside this page. the model downloads once ({model.size}) and is cached; your audio never leaves the
+        machine. each take is matched to one of your lines afterwards.
+      </p>
+
+      <div class="row">
+        <label>
+          language
+          <small>what the takes are spoken in.</small>
+        </label>
+        <div class="val">
+          <div class="seg">
+            {(['spanish', 'english', 'auto'] as const).map((l) => (
+              <button class={st.asrLanguage === l ? 'on' : ''} disabled={busy} onClick={() => s.updateSettings({ asrLanguage: l })}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          model
+          <small>small is the safe choice for spanish; base is roughly three times faster.</small>
+        </label>
+        <div class="val">
+          <div class="seg">
+            {(['small', 'base'] as const).map((m) => (
+              <button class={st.asrModel === m ? 'on' : ''} disabled={busy} onClick={() => s.updateSettings({ asrModel: m })}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          runs on
+          <small>{device}</small>
+        </label>
+        <div class="val">
+          <span class="mono">
+            {withText}/{p.clips.length} transcribed
+          </span>
+        </div>
+      </div>
+
+      {(busy || ai.status === 'done' || ai.status === 'cancelled' || ai.status === 'error') && (
+        <div style={{ marginTop: 16 }}>
+          <div class={ai.status === 'error' ? 'error' : 'muted'} style={{ marginBottom: 6 }}>
+            {ai.message}
+            {ai.status === 'running' ? ` · ${ai.done}/${ai.total}${ai.eta ? ` · about ${Math.ceil(ai.eta / 60)} min left` : ''}` : ''}
+          </div>
+          {busy && (
+            <div class="bar">
+              <i style={{ width: `${Math.round(ai.progress * 100)}%` }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div class="foot">
+        <span class="left">{hasScript ? 'you can keep sorting while it runs; the banner shows progress.' : 'paste the script first (t) so takes have lines to match.'}</span>
+        <button class="k" onClick={() => s.openModal(null)}>
+          close
+        </button>
+        {busy ? (
+          <button class="k" onClick={() => s.cancelTranscribe()}>
+            cancel
+          </button>
+        ) : (
+          <>
+            {withText > 0 && (
+              <button class="k" disabled={!hasScript} title="use the stored transcripts; no gpu time" onClick={() => s.realign()}>
+                re-match lines
+              </button>
+            )}
+            {withText > 0 && withText < p.clips.length && (
+              <button class="k" disabled={!hasScript} onClick={() => void s.transcribe('missing')}>
+                only new takes
+              </button>
+            )}
+            <button class="k amber" disabled={!hasScript} onClick={() => void s.transcribe('all')}>
+              {withText ? 'transcribe all again' : 'transcribe all takes'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

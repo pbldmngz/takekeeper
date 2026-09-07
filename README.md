@@ -32,6 +32,7 @@ Everything acts on the clip under the amber playhead.
 | `L` / `Shift+L` | Continue the script here / jump to a line number |
 | `[` / `]` | This clip: one line back / forward |
 | `G` · `Shift+↑` `Shift+↓` | Line mode: one line's takes at a time · previous / next line |
+| `W` / `U` | Transcribe takes with Whisper (in-browser, WebGPU) and match them to lines / next doubtful match |
 | `T` | Edit the script |
 | `A` | Toggle autoplay |
 | `=` / `-` | Monitor gain up / down (listening only, never exported) |

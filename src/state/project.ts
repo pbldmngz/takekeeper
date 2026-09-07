@@ -8,6 +8,8 @@ export interface Clip {
   end: number; // exclusive
   lane: number; // 0 = Unsorted ... laneNames.length-1 = Final, TRASH = -1
   line?: number; // explicit script line; unset clips inherit from the previous clip
+  text?: string; // transcript, when transcribed
+  conf?: number; // 0..1 confidence of the automatic line match
 }
 
 export interface Settings extends DetectParams {
@@ -23,6 +25,8 @@ export interface Settings extends DetectParams {
   autoplay: boolean;
   theme: 'auto' | 'dark' | 'light';
   laneNames: string[];
+  asrLanguage: 'spanish' | 'english' | 'auto';
+  asrModel: 'base' | 'small';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -41,6 +45,8 @@ export const DEFAULT_SETTINGS: Settings = {
   autoplay: true,
   theme: 'auto',
   laneNames: ['Unsorted', 'Pass 1', 'Pass 2', 'Final'],
+  asrLanguage: 'spanish',
+  asrModel: 'small',
 };
 
 export interface Project {

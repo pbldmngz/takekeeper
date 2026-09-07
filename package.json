@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "preact": "^10.24.0"
   },
   "devDependencies": {

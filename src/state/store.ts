@@ -3,6 +3,9 @@ import { analyze, segment, type Analysis } from '../audio/analyze';
 import { fileKey, openAudio, type Source } from '../audio/wav';
 import { Player, type Loaded } from '../audio/player';
 import { saveBlob } from '../audio/export';
+import { clipTo16k } from '../ai/audio';
+import { UNCERTAIN, alignTakes, cleanTranscript } from '../ai/align';
+import { LANGUAGES, MODELS, Transcriber, detectDevice } from '../ai/transcriber';
 import { clamp, fmtTime, stem, uid } from '../util';
 import {
   TRASH,
@@ -29,7 +32,17 @@ import {
   type Settings,
 } from './project';
 
-export type Modal = 'settings' | 'export' | 'help' | 'goto' | null;
+export type Modal = 'settings' | 'export' | 'help' | 'goto' | 'transcribe' | null;
+
+export interface AiState {
+  status: 'idle' | 'loading' | 'running' | 'done' | 'cancelled' | 'error';
+  progress: number; // 0..1 of the current phase
+  done: number;
+  total: number;
+  message: string;
+  eta: number | null; // seconds
+  uncertain: number;
+}
 
 export interface AppState {
   phase: 'empty' | 'loading' | 'ready';
@@ -53,6 +66,7 @@ export interface AppState {
   lineMode: boolean; // the lane is filtered to one script line
   lineFilter: number | null; // that line (global n)
   showContext: boolean; // script panel shows other characters and directions too
+  ai: AiState;
 }
 
 const MAX_UNDO = 300;
@@ -80,6 +94,7 @@ class Store {
     lineMode: false,
     lineFilter: null,
     showContext: false,
+    ai: { status: 'idle', progress: 0, done: 0, total: 0, message: '', eta: null, uncertain: 0 },
   };
 
   player = new Player();
@@ -94,6 +109,7 @@ class Store {
   private toastN = 0;
   private playToken = 0;
   private handle: FileSystemFileHandle | null = null;
+  private asr = new Transcriber();
   private linesCache: { clips: Clip[]; map: Map<string, number> } | null = null;
   private countsCache: { clips: Clip[]; counts: Map<number, number[]> } | null = null;
 
@@ -966,6 +982,129 @@ class Store {
     const { source, analysis, settings } = this.state;
     if (!source || !analysis) return 0;
     return segment(analysis, source.frames, source.sampleRate, settings).length;
+  }
+
+  // ---------- transcription ----------
+
+  /** Transcribe takes with Whisper in the browser, then match each to one of the user's lines. */
+  async transcribe(scope: 'missing' | 'all') {
+    const s = this.state;
+    const p = s.project;
+    const src = s.source;
+    if (!p || !src) return;
+    const mine = this.mine();
+    if (!mine.length) return this.toast('paste the script first · t');
+    if (s.ai.status === 'loading' || s.ai.status === 'running') return;
+    const model = MODELS[s.settings.asrModel];
+    const language = LANGUAGES[s.settings.asrLanguage];
+    const { device, label } = await detectDevice();
+    s.ai = { status: 'loading', progress: 0, done: 0, total: 0, message: `loading ${model.label.split(' ')[0]} model on ${label}`, eta: null, uncertain: 0 };
+    this.emit();
+    try {
+      await this.asr.load(model.id, device, (frac, message) => {
+        s.ai.progress = frac;
+        s.ai.message = message;
+        this.emit();
+      });
+    } catch (e) {
+      s.ai = { ...s.ai, status: 'error', message: e instanceof Error ? e.message : String(e) };
+      return this.emit();
+    }
+    const order = [...p.clips].sort(byStart);
+    const todo = order.filter((c) => scope === 'all' || !c.text);
+    s.ai = { status: 'running', progress: 0, done: 0, total: todo.length, message: 'transcribing', eta: null, uncertain: 0 };
+    this.emit();
+    const texts = new Map<string, string>();
+    const t0 = performance.now();
+    try {
+      for (const c of todo) {
+        if (s.ai.status !== 'running') break;
+        const audio = await clipTo16k(src, c.start, c.end);
+        let text = '';
+        try {
+          text = cleanTranscript(await this.asr.transcribe(audio, language));
+        } catch (e) {
+          if (s.ai.status !== 'running') throw e; // cancelled
+          text = ''; // one bad take must not stop the hour
+        }
+        texts.set(c.id, text);
+        s.ai.done++;
+        s.ai.progress = s.ai.done / s.ai.total;
+        const per = (performance.now() - t0) / s.ai.done;
+        s.ai.eta = Math.round((per * (s.ai.total - s.ai.done)) / 1000);
+        if (s.ai.done % 3 === 0 || s.ai.done === s.ai.total) this.emit();
+      }
+    } catch (e) {
+      if (s.ai.status === 'running') {
+        s.ai = { ...s.ai, status: 'error', message: e instanceof Error ? e.message : String(e) };
+        this.applyTranscripts(texts, false);
+        return this.emit();
+      }
+    }
+    const cancelled = s.ai.status !== 'running';
+    this.applyTranscripts(texts, !cancelled);
+    if (cancelled) {
+      s.ai = { ...s.ai, status: 'cancelled', message: `stopped · ${texts.size} takes transcribed, lines not re-matched` };
+    } else {
+      s.ai = { ...s.ai, status: 'done', message: `${texts.size} takes transcribed · ${s.ai.uncertain} uncertain · u jumps to them` };
+    }
+    this.emit();
+  }
+
+  /** Store transcripts; when `align`, match every transcribed take to a line. */
+  private applyTranscripts(texts: Map<string, string>, align: boolean) {
+    const p = this.state.project;
+    if (!p || !texts.size) return;
+    const mine = this.mine();
+    if (!align || !mine.length) {
+      this.commit((clips) => clips.map((c) => (texts.has(c.id) ? { ...c, text: texts.get(c.id) } : c)));
+      return;
+    }
+    const order = [...p.clips].sort(byStart).filter((c) => texts.has(c.id) || c.text);
+    const transcripts = order.map((c) => texts.get(c.id) ?? c.text ?? '');
+    const al = alignTakes(transcripts, mine);
+    const byId = new Map(order.map((c, i) => [c.id, al[i]]));
+    let uncertain = 0;
+    this.commit((clips) =>
+      clips.map((c) => {
+        const a = byId.get(c.id);
+        if (!a) return c;
+        if (a.confidence < UNCERTAIN) uncertain++;
+        return { ...c, text: texts.get(c.id) ?? c.text, line: a.n, conf: a.confidence };
+      }),
+    );
+    this.state.ai.uncertain = uncertain;
+  }
+
+  /** Match stored transcripts to lines again, e.g. after changing the character or the script. */
+  realign() {
+    const p = this.state.project;
+    if (!p) return;
+    const texts = new Map<string, string>();
+    for (const c of p.clips) if (c.text !== undefined) texts.set(c.id, c.text);
+    if (!texts.size) return this.toast('nothing transcribed yet · w');
+    if (!this.mine().length) return this.toast('paste the script first · t');
+    this.applyTranscripts(texts, true);
+    this.toast(`lines re-matched · ${this.state.ai.uncertain} uncertain`);
+  }
+
+  cancelTranscribe() {
+    if (this.state.ai.status === 'loading' || this.state.ai.status === 'running') {
+      this.state.ai.status = 'cancelled';
+      this.asr.cancel();
+      this.emit();
+    }
+  }
+
+  /** U: the next take whose line match is doubtful, in this lane. */
+  nextUncertain() {
+    const list = this.laneList();
+    const c = this.clip();
+    const from = c ? list.findIndex((x) => x.id === c.id) : -1;
+    const isDoubtful = (x: Clip) => x.conf !== undefined && x.conf < UNCERTAIN;
+    const next = list.slice(from + 1).find(isDoubtful) ?? list.slice(0, from + 1).find(isDoubtful);
+    if (!next) return this.toast('no uncertain takes in this lane');
+    this.gotoClip(next.id, { play: true });
   }
 
   // ---------- ui ----------

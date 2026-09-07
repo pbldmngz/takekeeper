@@ -57,6 +57,11 @@ export function ScriptPanel() {
               cues
             </button>
           )}
+          {!editing && all.length > 0 && (
+            <button class="k" onClick={() => s.openModal('transcribe')} title="transcribe takes and match them to lines">
+              <kbd>w</kbd>
+            </button>
+          )}
           {editing ? (
             <button class="k" onClick={() => s.setScriptEditing(false)}>
               done <kbd>esc</kbd>

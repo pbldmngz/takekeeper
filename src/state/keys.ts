@@ -132,6 +132,12 @@ export function installKeys() {
       case 'g':
         e.preventDefault();
         return store.toggleLineMode();
+      case 'w':
+        e.preventDefault();
+        return store.openModal('transcribe');
+      case 'u':
+        e.preventDefault();
+        return store.nextUncertain();
       case 'a':
         e.preventDefault();
         return store.toggleAutoplay();

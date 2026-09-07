@@ -9,7 +9,7 @@ import { ScriptPanel } from './ScriptPanel';
 
 export function Editor() {
   const s = useStore();
-  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved, lineMode, lineFilter } = s.state;
+  const { project: p, source: src, lane, playing, slow, settings, toast, unsaved, lineMode, lineFilter, ai } = s.state;
   if (!p || !src) return null;
   const counts = laneCounts(p);
   const clip = s.clip();
@@ -74,7 +74,9 @@ export function Editor() {
       <div class={`banner${toast ? '' : ' quiet'}`}>
         {toast
           ? toast.text
-          : lineBanner ?? `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`}
+          : ai.status === 'loading' || ai.status === 'running'
+            ? `${ai.message} · ${ai.status === 'running' ? `${ai.done}/${ai.total}` : `${Math.round(ai.progress * 100)}%`}${ai.eta ? ` · ${Math.ceil(ai.eta / 60)} min left` : ''} · w to cancel`
+            : lineBanner ?? `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`}
       </div>
 
       <Overview />
@@ -95,6 +97,12 @@ export function Editor() {
             {line ? (
               <span class="line-text">
                 <b>line {ord ?? line}</b> {lineText}
+                {clip.text !== undefined && (
+                  <span class="tx" title="transcript">
+                    {' '}
+                    {clip.conf !== undefined && clip.conf < 0.42 ? <b class="doubt">? </b> : null}“{clip.text || '…'}”
+                  </span>
+                )}
               </span>
             ) : (
               <span class="line-text dim">

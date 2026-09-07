@@ -25,7 +25,9 @@ ctx.onmessage = async (e: MessageEvent) => {
     if (asr && loadedKey === key) return ctx.postMessage({ type: 'ready' });
     asr = null;
     try {
-      const dtype = msg.device === 'webgpu' ? { encoder_model: 'fp16', decoder_model_merged: 'q4' } : 'q8';
+      // base's encoder is not stable in fp16 on webgpu (outputs collapse to one token); small is fine
+      const encoder = /whisper-(tiny|base)/.test(msg.model) ? 'fp32' : 'fp16';
+      const dtype = msg.device === 'webgpu' ? { encoder_model: encoder, decoder_model_merged: 'q4' } : 'q8';
       const p = await pipeline('automatic-speech-recognition', msg.model, {
         device: msg.device,
         dtype: dtype as never,

@@ -237,6 +237,25 @@ export function findProjectFor(audio: { name: string; frames: number; sampleRate
   return best;
 }
 
+/** Forget a saved project; the recording itself is untouched. Points "last" at the newest remaining one. */
+export function deleteProject(key: string) {
+  try {
+    localStorage.removeItem(K.project(key));
+    const prefix = K.project('');
+    let newest: Project | null = null;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k?.startsWith(prefix)) continue;
+      const p = loadProject(k.slice(prefix.length));
+      if (p && (!newest || (p.savedAt ?? 0) > (newest.savedAt ?? 0))) newest = p;
+    }
+    if (newest) localStorage.setItem(K.last, JSON.stringify({ key: newest.key, name: newest.name }));
+    else localStorage.removeItem(K.last);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function lastProject(): { key: string; name: string } | null {
   try {
     const raw = localStorage.getItem(K.last);
@@ -261,6 +280,20 @@ export async function idbSet(key: string, value: unknown) {
     await new Promise<void>((res, rej) => {
       const tx = db.transaction('kv', 'readwrite');
       tx.objectStore('kv').put(value, key);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function idbDel(key: string) {
+  try {
+    const db = await idb();
+    await new Promise<void>((res, rej) => {
+      const tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').delete(key);
       tx.oncomplete = () => res();
       tx.onerror = () => rej(tx.error);
     });

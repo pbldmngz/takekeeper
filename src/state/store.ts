@@ -11,9 +11,11 @@ import {
   JUNK,
   TRASH,
   byStart,
+  deleteProject,
   derivedLines,
   finalLane,
   findProjectFor,
+  idbDel,
   idbGet,
   idbSet,
   laneClips,
@@ -441,6 +443,16 @@ class Store {
       this.fail(e);
     }
     this.emit();
+  }
+
+  /** Forget the saved sorting for the file offered on the landing page. */
+  discardResumable() {
+    const r = this.state.resumable;
+    if (!r) return;
+    deleteProject(r.key);
+    void idbDel(`handle:${r.key}`);
+    this.state.resumable = lastProject();
+    this.toast(`forgot ${r.name}`);
   }
 
   private fail(e: unknown) {

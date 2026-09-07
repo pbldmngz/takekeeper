@@ -6,6 +6,7 @@ export function Empty() {
   const s = useStore();
   const { phase, progress, status, error, resumable } = s.state;
   const [over, setOver] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -67,10 +68,35 @@ export function Empty() {
 
           {resumable && (
             <p class="resume">
-              <span class="dim">&gt;</span> continue <b>{resumable.name}</b>
-              <button class="k amber" onClick={() => void s.resume()}>
-                resume
-              </button>
+              <span class="dim">&gt;</span> {confirm ? 'forget the sorting for' : 'continue'} <b>{resumable.name}</b>
+              {confirm && <span class="dim">? the recording stays where it is</span>}
+              <span class="actions">
+                {confirm ? (
+                  <>
+                    <button class="k" onClick={() => setConfirm(false)}>
+                      keep
+                    </button>
+                    <button
+                      class="k amber"
+                      onClick={() => {
+                        s.discardResumable();
+                        setConfirm(false);
+                      }}
+                    >
+                      yes, discard
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button class="k amber" onClick={() => void s.resume()}>
+                      resume
+                    </button>
+                    <button class="k muted" onClick={() => setConfirm(true)} title="forget the saved sorting for this file">
+                      discard
+                    </button>
+                  </>
+                )}
+              </span>
             </p>
           )}
           {error && (

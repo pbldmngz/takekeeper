@@ -351,8 +351,11 @@ hr {
   color: var(--text);
   font-weight: 500;
 }
-.resume .k {
+.resume .actions {
   margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+  flex-shrink: 0;
 }
 .error {
   border: 1px solid var(--coral);

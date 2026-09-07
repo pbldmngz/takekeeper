@@ -138,7 +138,13 @@ export function ScriptPanel() {
                     {c
                       ? c
                           .slice(0, -2)
-                          .map((k, i) => (k ? `${i === 0 ? '' : p.laneNames[i].toLowerCase().replace(/^pass /, 'p')}${k}` : ''))
+                          .map((k, i) => {
+                            if (!k) return '';
+                            if (i === 0) return String(k); // unsorted: bare count
+                            const name = p.laneNames[i].toLowerCase();
+                            const abbr = /^pass\s*(\d+)$/.test(name) ? name.replace(/^pass\s*/, 'p') : name.slice(0, 1);
+                            return `${abbr}:${k}`; // p1:4 = four takes in pass 1, f:1 = one in final
+                          })
                           .filter(Boolean)
                           .join(' ') || '·'
                       : '·'}

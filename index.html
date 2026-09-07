@@ -7,13 +7,13 @@
     <title>Takekeeper: sort voice-over takes in your browser</title>
     <meta
       name="description"
-      content="Drop an hour-long WAV of voice-over takes. Takekeeper splits it at the silences, then you keep the good takes with the keyboard: multi-pass lanes, split, merge, trim, script line marks, export straight into FL Studio or any DAW. Free, private, nothing uploaded."
+      content="Drop an hour-long WAV of voice-over takes. Takekeeper cuts it at the silences, transcribes every take on your own GPU, matches each one to your script, and lets you keep the good ones line by line with the keyboard. Multi-pass lanes, junk detection, split, merge, trim, export straight into FL Studio or any DAW. Free, private, nothing uploaded."
     />
     <link rel="canonical" href="https://takekeeper.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Takekeeper" />
     <meta property="og:title" content="Takekeeper: the takes worth keeping" />
-    <meta property="og:description" content="Take triage for voice actors. Split a session at the silences, sort takes into passes with the keyboard, export the keepers. Runs in your browser, nothing uploaded." />
+    <meta property="og:description" content="Take triage for voice actors. Split a session at the silences, transcribe on your GPU, sort takes line by line into passes with the keyboard, export the keepers. Runs in your browser, nothing uploaded." />
     <meta property="og:url" content="https://takekeeper.com/" />
     <meta property="og:image" content="https://takekeeper.com/og.png" />
     <meta property="og:image:width" content="1200" />
@@ -27,34 +27,121 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "SoftwareApplication",
-            "name": "Takekeeper",
-            "url": "https://takekeeper.com/",
-            "applicationCategory": "MultimediaApplication",
-            "operatingSystem": "Web browser (Chrome, Edge)",
-            "description": "Take triage for voice actors: split a long voice-over recording at the silences, sort the takes into passes with the keyboard, fix cuts, and export the keepers as numbered WAV files. Runs entirely in the browser.",
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-            "audience": { "@type": "Audience", "audienceType": "Voice actors, audiobook narrators, dubbing and ADR performers" }
-          },
-          {
-            "@type": "FAQPage",
-            "mainEntity": [
-              { "@type": "Question", "name": "Is my recording uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. Takekeeper reads the file straight from your disk inside the browser. There is no server, no account and no upload; the exported clips are written back to your disk." } },
-              { "@type": "Question", "name": "How long can the recording be?", "acceptedAnswer": { "@type": "Answer", "text": "WAV files can be any length: an hour-long 24-bit session with 800 takes loads in a few seconds and uses almost no memory, because clips are references into the original file, not copies. Compressed formats (MP3, FLAC, OGG, M4A) are decoded in memory, so keep those under about 25 minutes or convert to WAV first." } },
-              { "@type": "Question", "name": "How does it find the takes?", "acceptedAnswer": { "@type": "Answer", "text": "It measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. Short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides of every take. Threshold, minimum silence and margin are adjustable and you can re-detect at any time." } },
-              { "@type": "Question", "name": "What if a cut lands in the wrong place?", "acceptedAnswer": { "@type": "Answer", "text": "Every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour, which restores the original audio between them. Everything has undo." } },
-              { "@type": "Question", "name": "How do I get the takes into FL Studio?", "acceptedAnswer": { "@type": "Answer", "text": "Export the Final lane as a folder of numbered WAV files. In FL Studio's Browser, sort the folder by name, select every file and hold Shift while dropping them onto the Playlist; they land on one track, in order. Turn on Ripple edit so deleting a clip closes the gap." } },
-              { "@type": "Question", "name": "Does it transcribe or match my script?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, optionally, without uploading anything: Whisper runs on your own GPU inside the page, the model downloads once and is cached, every take gets a transcript and is matched to one of your lines in recording order, and doubtful matches are flagged. Without transcription, paste the whole script: rows like \"Name: text\" are spoken lines, everything else is direction, and you pick your character. Press L on the first take of each of your lines while listening; every clip after it inherits that line, [ and ] fix a take you went back for, and G shows one line's takes at a time with counts per lane so missing lines stand out. Line numbers are included in the exported file names." } },
-              { "@type": "Question", "name": "Will my sorting survive closing the tab?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lanes, cuts, line marks and the script are saved in the browser as you work and restored when you open the same WAV. Press Ctrl+S to also save a small .takekeeper.json project file next to the recording; drop it on the landing page in any browser to pick up where you left off." } },
-              { "@type": "Question", "name": "Which browsers work?", "acceptedAnswer": { "@type": "Answer", "text": "Chrome and Edge on desktop get everything, including saving straight into a folder and reopening your session with one click. Firefox works with a zip download instead. It is a keyboard tool, so phones and tablets are not the target." } }
-            ]
-          }
-        ]
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Takekeeper",
+      "url": "https://takekeeper.com/",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web browser (Chrome, Edge)",
+      "description": "Take triage for voice actors: split a long voice-over recording at the silences, transcribe every take with Whisper on your own GPU, match takes to script lines, sort them line by line into passes with the keyboard, fix cuts, and export the keepers as numbered WAV files. Runs entirely in the browser; nothing is uploaded.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Voice actors, audiobook narrators, dubbing and ADR performers"
       }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is my recording uploaded anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. takekeeper reads the file straight from your disk inside the browser, and transcription runs on your own gpu inside the page. there is no server, no account and no upload; the only downloads are the app and, once, the speech model."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long can the recording be?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Wav files can be any length: an hour-long 24-bit session with 800 takes loads in a few seconds and uses almost no memory, because clips are references into the original file, not copies. compressed formats (mp3, flac, ogg, m4a) are decoded in memory, so keep those under about 25 minutes or convert to wav first."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does it find the takes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides. threshold, minimum silence and margin are adjustable and you can re-detect at any time. after transcription, takes that contain two reads are cut again at the pause between them, or between the words when there is none."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does transcription work, and how long does it take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Whisper runs in your browser through webgpu, so it needs chrome or edge and a gpu. the model downloads once and is cached: small (about 410 mb) is the safe choice for spanish, base (about 140 mb) is twice as fast and a little rougher. on a mid-range gpu an hour of takes transcribes in roughly twelve minutes, and you can keep sorting while it runs. each take is then matched to one of your lines in recording order, breaths and slates go to the junk lane, and takes with several reads are re-cut."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if it matches a take to the wrong line?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Doubtful matches carry a mark and u walks through them; [ and ] move a take one line back or forward while you listen. if you change your character or fix a typo in the script, \"re-match lines\" in the transcribe dialog redoes the matching from the stored transcripts in a second, without the gpu."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can i use it without transcription?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. paste the script and press l on the first take of each of your lines while listening; every take after it inherits that line until the next mark. [ and ] fix a take you went back for, and line mode with counts works the same either way."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the junk lane?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "After transcription, takes with no words in them (breaths, slates, a cough, a false start that never got to a word) move to the junk lane instead of staying in your way. review it like any lane: backspace confirms, enter rescues to unsorted. it never takes a line's last remaining take, so no line goes silent by accident."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if a cut lands in the wrong place?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Every take shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a take in two, or merge it back with its neighbour, which restores the original audio between them. everything has undo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Will my sorting survive closing the tab?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. lanes, cuts, line marks, transcripts and where you were are saved in the browser as you work, and every recording you touched is listed on this page to resume or discard. if you re-export or rename the recording, takekeeper looks for a saved session with the same length and picks it up. for anything you care about, press ctrl s: it writes a small .takekeeper.json next to the wav that you can drop on this page any time, in any browser."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which browsers work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Chrome and edge on desktop get everything, including transcription, saving straight into a folder, and reopening your session with one click. firefox sorts fine but downloads a zip and has no webgpu, so transcription falls back to the cpu and is slow. it is a keyboard tool, so phones and tablets are not the target."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can i record directly in takekeeper?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not yet. record in your usual chain (your interface and daw do it better) and drop the wav here. recording pickups in the browser is on the list."
+          }
+        }
+      ]
+    }
+  ]
+}
     </script>
   </head>
   <body data-phase="empty">
@@ -65,7 +152,7 @@
         <figure class="shot">
           <img
             src="/screenshot.png"
-            alt="takekeeper editor: a strip of 848 detected takes along the top, the current take's waveform with the amber playhead, the script panel, and a toolbar with every key"
+            alt="takekeeper editor: a strip of 848 detected takes along the top, the current take's waveform with the amber playhead, the script panel with your lines, and a toolbar with every key"
             width="1913"
             height="941"
             loading="lazy"
@@ -81,13 +168,13 @@
         <h2 class="prompt">made for one job</h2>
         <p>
           <b>takekeeper is a take-selection tool for voice actors.</b> you record a session in one long file: take after take, with silence in
-          between. takekeeper turns that file into individual takes and gives you a keyboard-only way to keep the good ones, in as many
-          passes as you need, without ever touching a timeline.
+          between. takekeeper turns that file into individual takes, works out which line of your script each one is, and gives you a
+          keyboard-only way to keep the good ones, line by line, in as many passes as you need, without ever touching a timeline.
         </p>
         <p>
           it is built for <b>voice-over sessions</b>, <b>audiobook narration</b>, <b>dubbing and adr</b>, character reads, auditions, and
-          pickups: anything where you need to <b>split a voice recording at the silences</b>, listen to every take, and end up with a clean
-          folder of keepers for your daw.
+          pickups, in <b>spanish and english</b>: anything where you need to <b>split a voice recording at the silences</b>, hear every
+          take of a line together, and end up with a clean folder of keepers for your daw.
         </p>
       </section>
 
@@ -96,15 +183,19 @@
         <div class="steps">
           <div class="card">
             <h3>drop the session</h3>
-            <p>a wav of any length. the silences between takes are detected in seconds and every take becomes a clip in the <b>unsorted</b> lane.</p>
+            <p>a wav of any length. the silences between takes are detected in seconds and every take becomes a clip in the <b>unsorted</b> lane. paste the script, pick your character.</p>
           </div>
           <div class="card">
-            <h3>listen and sort</h3>
-            <p>clips autoplay one after another. <kbd class="amber">enter</kbd> promotes a take to the next lane, <kbd>backspace</kbd> trashes it. do a second pass on <b>pass 1</b>, a third on <b>pass 2</b>, until <b>final</b> holds the ones you want.</p>
+            <h3>let it read the takes</h3>
+            <p>press <kbd>w</kbd> and whisper transcribes every take on your own gpu, inside the page. each take is matched to one of your lines; breaths and slates go to a <b>junk</b> lane; a take with two reads in it is cut in two.</p>
+          </div>
+          <div class="card">
+            <h3>sort, line by line</h3>
+            <p>walk your lines with the count of takes per pass on each. takes autoplay; <kbd class="amber">enter</kbd> promotes one to the next lane, <kbd>backspace</kbd> trashes it. second pass on <b>pass 1</b>, third on <b>pass 2</b>, until <b>final</b> holds one per line.</p>
           </div>
           <div class="card">
             <h3>export the keepers</h3>
-            <p>the final lane becomes numbered wav files written straight into a folder, ready to shift-drop onto one track in fl studio, or into reaper, audition, pro tools.</p>
+            <p>the final lane becomes numbered wav files with the line number in the name, written straight into a folder, ready to shift-drop onto one track in fl studio, or into reaper, audition, pro tools.</p>
           </div>
         </div>
       </section>
@@ -116,21 +207,37 @@
             <h3>detection built for takes</h3>
             <p>800 takes in an hour is the normal case. threshold, minimum silence and margin are adjustable; re-detect never loses your sorting.</p>
           </div>
+          <div class="card amber">
+            <h3>transcription on your gpu</h3>
+            <p>whisper runs in the browser via webgpu. the model downloads once; your audio never leaves the machine. about twelve minutes for an hour of takes.</p>
+          </div>
+          <div class="card">
+            <h3>every take knows its line</h3>
+            <p>takes are matched to the script in recording order, so a line you went back for still lands where it belongs. doubtful matches are flagged; <kbd>u</kbd> walks them.</p>
+          </div>
+          <div class="card">
+            <h3>junk lane</h3>
+            <p>breaths, slates and false starts with no words move out of your way on their own, into a lane you review with the same two keys. it never takes a line's last take.</p>
+          </div>
+          <div class="card">
+            <h3>cuts fixed by ear and by word</h3>
+            <p>a take that repeats its line is re-cut at the pauses, and where there is no pause, between the words. false starts are separated; a line a pause split in two is joined back.</p>
+          </div>
           <div class="card">
             <h3>lanes instead of layers</h3>
-            <p>the multi-pass selection you already do by dragging clips between tracks, without the dragging.</p>
-          </div>
-          <div class="card amber">
-            <h3>keyboard only</h3>
-            <p>every action is a key, placed so a whole session can be sorted with one hand and no mouse.</p>
+            <p>the multi-pass selection you already do by dragging clips between tracks, without the dragging. configurable lanes, counts on every tab and on every line.</p>
           </div>
           <div class="card">
-            <h3>fix the cuts</h3>
+            <h3>keyboard first, mouse too</h3>
+            <p>every action is a key, placed so a whole session can be sorted with one hand. every key is also a button.</p>
+          </div>
+          <div class="card">
+            <h3>fix the cuts yourself</h3>
             <p>replay slow, step by a frame, split, merge a miscut back together, set a new start or end. undo everything.</p>
           </div>
           <div class="card">
-            <h3>script, line by line</h3>
-            <p>paste the whole script, pick your character, mark lines as you listen, or let whisper transcribe every take on your gpu and match it to a line. then walk your lines one at a time with the count per pass on each, and see at once which line has no take yet.</p>
+            <h3>sessions that come back</h3>
+            <p>lanes, cuts, lines and transcripts are saved as you work; every recording you touched is listed here to resume or discard. <kbd>ctrl s</kbd> writes a project file you can drop back in anywhere.</p>
           </div>
           <div class="card">
             <h3>private, bit-exact</h3>
@@ -141,32 +248,35 @@
 
       <section id="keys" class="wide">
         <h2 class="prompt">keys</h2>
-        <p>everything acts on the clip under the amber playhead.</p>
+        <p>everything acts on the clip under the amber playhead. every key is also a button in the toolbar.</p>
         <div class="keys-cols">
           <table class="keytable">
-            <tr><td><kbd>space</kbd> / <kbd>shift space</kbd></td><td>play–pause / play clip from its start in slow motion</td></tr>
-            <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>previous / next clip</td></tr>
+            <tr><td><kbd>space</kbd> / <kbd>shift space</kbd></td><td>play–pause / play the take from its start in slow motion</td></tr>
+            <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>previous / next take</td></tr>
             <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>move the playhead · shift: one frame, precise · alt: a tenth</td></tr>
-            <tr><td><kbd>home</kbd> / <kbd>end</kbd></td><td>clip start / end</td></tr>
+            <tr><td><kbd>home</kbd> / <kbd>end</kbd></td><td>take start / end</td></tr>
             <tr><td><kbd class="amber">enter</kbd> / <kbd>shift enter</kbd></td><td>promote to next lane / demote</td></tr>
             <tr><td><kbd>backspace</kbd></td><td>trash; the lane closes up</td></tr>
             <tr><td><kbd>1</kbd>…<kbd>9</kbd> <kbd>0</kbd></td><td>send to lane n / back to unsorted</td></tr>
-            <tr><td><kbd>=</kbd> / <kbd>-</kbd></td><td>monitor gain up / down</td></tr>
-          </table>
-          <table class="keytable">
+            <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>next / previous lane, junk and trash included</td></tr>
+            <tr><td><kbd>=</kbd> / <kbd>-</kbd></td><td>monitor gain up / down, never exported</td></tr>
             <tr><td><kbd>s</kbd> / <kbd>shift s</kbd></td><td>split at playhead, staying on the first half / the second</td></tr>
             <tr><td><kbd>m</kbd> / <kbd>shift m</kbd></td><td>merge with next / previous</td></tr>
-            <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>set clip start / end at playhead</td></tr>
+            <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>set take start / end at playhead</td></tr>
+          </table>
+          <table class="keytable">
+            <tr><td><kbd>g</kbd></td><td>line mode: one line's takes at a time</td></tr>
+            <tr><td><kbd>shift ↑</kbd> <kbd>shift ↓</kbd></td><td>in line mode: previous / next line</td></tr>
             <tr><td><kbd>l</kbd> / <kbd>shift l</kbd></td><td>continue the script here / jump to a line number</td></tr>
-            <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>this clip: one line back / forward</td></tr>
-            <tr><td><kbd>g</kbd> · <kbd>shift ↑</kbd> <kbd>shift ↓</kbd></td><td>line mode: one line's takes at a time · previous / next line</td></tr>
-            <tr><td><kbd>w</kbd> / <kbd>u</kbd></td><td>transcribe takes and match them to lines / next doubtful match</td></tr>
-            <tr><td>junk lane</td><td>empty takes land here automatically; enter rescues, backspace confirms</td></tr>
+            <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>this take: one line back / forward</td></tr>
             <tr><td><kbd>t</kbd></td><td>edit the script</td></tr>
-            <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>switch lane</td></tr>
+            <tr><td><kbd>w</kbd></td><td>transcribe takes and match them to lines</td></tr>
+            <tr><td><kbd>u</kbd></td><td>next doubtful line match</td></tr>
+            <tr><td><kbd>a</kbd></td><td>toggle autoplay</td></tr>
             <tr><td><kbd>ctrl z</kbd> / <kbd>ctrl shift z</kbd></td><td>undo / redo</td></tr>
+            <tr><td><kbd>ctrl s</kbd> / <kbd>ctrl o</kbd></td><td>save the project file / open a file or project</td></tr>
             <tr><td><kbd>e</kbd> · <kbd>,</kbd> · <kbd>?</kbd></td><td>export · settings · key reference</td></tr>
-            <tr><td><kbd>ctrl s</kbd></td><td>save the project file (lanes, cuts, line marks, script)</td></tr>
+            <tr><td><kbd>esc</kbd></td><td>stop / close</td></tr>
           </table>
         </div>
       </section>
@@ -184,7 +294,7 @@
         <h2 class="prompt">faq</h2>
         <details>
           <summary>is my recording uploaded anywhere?</summary>
-          <p>no. takekeeper reads the file straight from your disk inside the browser. there is no server, no account and no upload; exported clips are written back to your disk.</p>
+          <p>no. takekeeper reads the file straight from your disk inside the browser, and transcription runs on your own gpu inside the page. there is no server, no account and no upload; the only downloads are the app and, once, the speech model.</p>
         </details>
         <details>
           <summary>how long can the recording be?</summary>
@@ -192,24 +302,35 @@
         </details>
         <details>
           <summary>how does it find the takes?</summary>
-          <p>it measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides. threshold, minimum silence and margin are adjustable and you can re-detect at any time.</p>
+          <p>it measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides. threshold, minimum silence and margin are adjustable and you can re-detect at any time. after transcription, takes that contain two reads are cut again at the pause between them, or between the words when there is none.</p>
+        </details>
+        <details>
+          <summary>how does transcription work, and how long does it take?</summary>
+          <p>whisper runs in your browser through webgpu, so it needs chrome or edge and a gpu. the model downloads once and is cached: <b>small</b> (about 410 mb) is the safe choice for spanish, <b>base</b> (about 140 mb) is twice as fast and a little rougher. on a mid-range gpu an hour of takes transcribes in roughly twelve minutes, and you can keep sorting while it runs. each take is then matched to one of your lines in recording order, breaths and slates go to the junk lane, and takes with several reads are re-cut.</p>
+        </details>
+        <details>
+          <summary>what if it matches a take to the wrong line?</summary>
+          <p>doubtful matches carry a mark and <kbd>u</kbd> walks through them; <kbd>[</kbd> and <kbd>]</kbd> move a take one line back or forward while you listen. if you change your character or fix a typo in the script, "re-match lines" in the transcribe dialog redoes the matching from the stored transcripts in a second, without the gpu.</p>
+        </details>
+        <details>
+          <summary>can i use it without transcription?</summary>
+          <p>yes. paste the script and press <kbd>l</kbd> on the first take of each of your lines while listening; every take after it inherits that line until the next mark. <kbd>[</kbd> and <kbd>]</kbd> fix a take you went back for, and line mode with counts works the same either way.</p>
+        </details>
+        <details>
+          <summary>what is the junk lane?</summary>
+          <p>after transcription, takes with no words in them (breaths, slates, a cough, a false start that never got to a word) move to the junk lane instead of staying in your way. review it like any lane: <kbd>backspace</kbd> confirms, <kbd>enter</kbd> rescues to unsorted. it never takes a line's last remaining take, so no line goes silent by accident.</p>
         </details>
         <details>
           <summary>what if a cut lands in the wrong place?</summary>
-          <p>every clip shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a clip in two, or merge it back with its neighbour, which restores the original audio between them. everything has undo.</p>
-        </details>
-        <details>
-          <summary>does it transcribe or match my script?</summary>
-          <p>yes, optionally, and without uploading anything: press <kbd>w</kbd> and whisper runs on your own gpu inside the page (the model downloads once and is cached). every take gets a transcript and is matched to one of your lines, in recording order, so a take you went back for still lands on the right line; doubtful matches are flagged and <kbd>u</kbd> jumps to them. spanish and english are tuned for; other languages work in auto mode.</p>
-          <p>without transcription, paste the whole script: <b>name: text</b> rows are spoken lines, everything else is direction, and you pick your character. press <kbd>l</kbd> on the first take of each of your lines while listening; every clip after it inherits that line, <kbd>[</kbd> and <kbd>]</kbd> fix a take you went back for, and <kbd>g</kbd> shows one line's takes at a time with counts per lane, so missing lines stand out. line numbers go into the exported file names.</p>
-        </details>
-        <details>
-          <summary>which browsers work?</summary>
-          <p>chrome and edge on desktop get everything, including saving straight into a folder and reopening your session with one click. firefox works with a zip download instead. it is a keyboard tool, so phones and tablets are not the target.</p>
+          <p>every take shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a take in two, or merge it back with its neighbour, which restores the original audio between them. everything has undo.</p>
         </details>
         <details>
           <summary>will my sorting survive closing the tab?</summary>
-          <p>yes: lanes, cuts, line marks and the script are saved in the browser as you work and come back when you open the same wav. they are tied to that file, so if you re-export or rename the recording, takekeeper looks for a saved project with the same length and picks it up. for anything you care about, press <kbd>ctrl s</kbd>: it writes a small .takekeeper.json next to the wav that you can drop on this page any time, in any browser.</p>
+          <p>yes. lanes, cuts, line marks, transcripts and where you were are saved in the browser as you work, and every recording you touched is listed on this page to resume or discard. if you re-export or rename the recording, takekeeper looks for a saved session with the same length and picks it up. for anything you care about, press <kbd>ctrl s</kbd>: it writes a small .takekeeper.json next to the wav that you can drop on this page any time, in any browser.</p>
+        </details>
+        <details>
+          <summary>which browsers work?</summary>
+          <p>chrome and edge on desktop get everything, including transcription, saving straight into a folder, and reopening your session with one click. firefox sorts fine but downloads a zip and has no webgpu, so transcription falls back to the cpu and is slow. it is a keyboard tool, so phones and tablets are not the target.</p>
         </details>
         <details>
           <summary>can i record directly in takekeeper?</summary>

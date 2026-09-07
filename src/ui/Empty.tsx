@@ -43,8 +43,9 @@ export function Empty() {
           <p class="eyebrow">for voice actors</p>
           <h1>split a recording session into takes. keep the good ones.</h1>
           <p class="lead">
-            drop the one long wav from your session. takekeeper cuts it at every silence, plays the takes back to back, and you
-            promote or trash each one with a single key, then export the keepers as numbered files for fl studio, reaper or any daw.
+            drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and
+            matches it to your script, then you keep the good ones line by line with a single key and export the keepers as numbered
+            files for fl studio, reaper or any daw.
           </p>
 
           <div

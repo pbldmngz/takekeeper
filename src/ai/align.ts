@@ -180,6 +180,15 @@ export function diagnose(transcript: string, line: string, score: number): Diagn
   let reads = 0;
   for (const s of sentences) if (s.text && similarity(s, target) >= 0.55) reads++;
   if (reads >= 2) return { kind: 'multi', reads };
+  // a false start followed by the real read in the same breath: cut it like a multi
+  if (reads === 1 && sentences.length >= 2) {
+    const lineWords = target.text.split(' ');
+    for (const s of sentences) {
+      const n = s.text.split(' ').length;
+      if (n >= lineWords.length * 0.6 || similarity(s, target) >= 0.55) continue;
+      if (similarity(s, prepare(lineWords.slice(0, n + 1).join(' '))) >= 0.6) return { kind: 'multi', reads: sentences.length };
+    }
+  }
   // false start: clearly shorter than the line, but matching its beginning
   const lineWords = target.text.split(' ');
   if (score < 0.6 && words < lineWords.length * 0.6 && words >= 1) {
@@ -187,6 +196,45 @@ export function diagnose(transcript: string, line: string, score: number): Diagn
     if (similarity(t, head) >= 0.6) return { kind: 'partial', reads: 1 };
   }
   return { reads: Math.max(1, reads) };
+}
+
+export interface WordGroup {
+  text: string;
+  start: number; // seconds
+  end: number;
+}
+
+/** Split timed words into sentences (by the punctuation Whisper writes), or into `reads` equal runs when it wrote none. */
+export function groupWords(words: Array<{ text: string; start: number | null; end: number | null }>, reads: number, total: number): WordGroup[] {
+  const timed = words.filter((w) => w.text.trim());
+  if (!timed.length) return [];
+  // fill missing times from neighbours
+  for (let i = 0; i < timed.length; i++) {
+    if (timed[i].start === null) timed[i].start = i ? timed[i - 1].end : 0;
+    if (timed[i].end === null) timed[i].end = i + 1 < timed.length && timed[i + 1].start !== null ? timed[i + 1].start : total;
+  }
+  const groups: WordGroup[] = [];
+  let cur: WordGroup | null = null;
+  for (const w of timed) {
+    if (!cur) cur = { text: '', start: w.start as number, end: w.end as number };
+    cur.text += w.text;
+    cur.end = w.end as number;
+    if (/[.!?…]\s*$/.test(w.text)) {
+      groups.push(cur);
+      cur = null;
+    }
+  }
+  if (cur) groups.push(cur);
+  if (groups.length >= 2 || reads < 2 || timed.length < reads) return groups.map((g) => ({ ...g, text: g.text.trim() }));
+  // no punctuation to go by: equal runs
+  const per = Math.round(timed.length / reads);
+  const out: WordGroup[] = [];
+  for (let i = 0; i < timed.length; i += per) {
+    const run = timed.slice(i, i + per);
+    if (!run.length) continue;
+    out.push({ text: run.map((w) => w.text).join('').trim(), start: run[0].start as number, end: run[run.length - 1].end as number });
+  }
+  return out;
 }
 
 /** Whisper's failure mode on breaths and slates: one token repeated forever. */

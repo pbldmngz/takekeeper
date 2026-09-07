@@ -4,8 +4,9 @@
 export type AsrDevice = 'webgpu' | 'wasm';
 
 export const MODELS = {
-  base: { id: 'onnx-community/whisper-base', label: 'base · faster', size: '~140 MB' },
-  small: { id: 'onnx-community/whisper-small', label: 'small · more accurate', size: '~410 MB' },
+  // the _timestamped exports carry cross-attentions, which word timestamps need; same size and speed
+  base: { id: 'onnx-community/whisper-base_timestamped', label: 'base · faster', size: '~140 MB' },
+  small: { id: 'onnx-community/whisper-small_timestamped', label: 'small · more accurate', size: '~410 MB' },
 } as const;
 export type AsrModel = keyof typeof MODELS;
 
@@ -37,9 +38,20 @@ export async function detectDevice(): Promise<{ device: AsrDevice; label: string
   return { device: 'wasm', label: 'cpu · no webgpu, expect it to be slow' };
 }
 
+export interface Word {
+  text: string;
+  start: number | null; // seconds from the start of the audio given
+  end: number | null;
+}
+
+export interface Transcript {
+  text: string;
+  words: Word[];
+}
+
 export class Transcriber {
   private worker: Worker | null = null;
-  private pending = new Map<number, { resolve: (t: string) => void; reject: (e: Error) => void }>();
+  private pending = new Map<number, { resolve: (t: Transcript) => void; reject: (e: Error) => void }>();
   private nextId = 1;
   private files = new Map<string, { loaded: number; total: number }>();
   private loadWait: { resolve: () => void; reject: (e: Error) => void } | null = null;
@@ -54,7 +66,7 @@ export class Transcriber {
     return w;
   }
 
-  private handle(msg: { type: string; id?: number; text?: string; message?: string; info?: Progress }) {
+  private handle(msg: { type: string; id?: number; text?: string; words?: Word[]; message?: string; info?: Progress }) {
     if (msg.type === 'progress' && msg.info) {
       const p = msg.info;
       if (p.file && p.total) this.files.set(p.file, { loaded: p.loaded ?? 0, total: p.total });
@@ -75,7 +87,7 @@ export class Transcriber {
       return;
     }
     if (msg.type === 'result' && msg.id !== undefined) {
-      this.pending.get(msg.id)?.resolve(msg.text ?? '');
+      this.pending.get(msg.id)?.resolve({ text: msg.text ?? '', words: msg.words ?? [] });
       this.pending.delete(msg.id);
       return;
     }
@@ -109,11 +121,20 @@ export class Transcriber {
   }
 
   transcribe(audio: Float32Array, language: string | null): Promise<string> {
+    return this.run(audio, language, false).then((t) => t.text);
+  }
+
+  /** Transcript plus a start/end time for every word. About 1.4x the cost. */
+  transcribeWords(audio: Float32Array, language: string | null): Promise<Transcript> {
+    return this.run(audio, language, true);
+  }
+
+  private run(audio: Float32Array, language: string | null, words: boolean): Promise<Transcript> {
     const w = this.ensure();
     const id = this.nextId++;
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<Transcript>((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      w.postMessage({ type: 'transcribe', id, audio, language }, [audio.buffer]);
+      w.postMessage({ type: 'transcribe', id, audio, language, words }, [audio.buffer]);
     });
   }
 

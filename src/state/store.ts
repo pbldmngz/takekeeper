@@ -4,7 +4,7 @@ import { fileKey, openAudio, type Source } from '../audio/wav';
 import { Player, type Loaded } from '../audio/player';
 import { saveBlob } from '../audio/export';
 import { clipTo16k } from '../ai/audio';
-import { UNCERTAIN, alignTakes, cleanTranscript, diagnose } from '../ai/align';
+import { UNCERTAIN, alignTakes, cleanTranscript, diagnose, groupWords, prepare, similarity } from '../ai/align';
 import { LANGUAGES, MODELS, Transcriber, detectDevice } from '../ai/transcriber';
 import { clamp, fmtTime, stem, uid } from '../util';
 import {
@@ -1002,21 +1002,8 @@ class Store {
     const mine = this.mine();
     if (!mine.length) return this.toast('paste the script first · t');
     if (s.ai.status === 'loading' || s.ai.status === 'running') return;
-    const model = MODELS[s.settings.asrModel];
-    const language = LANGUAGES[s.settings.asrLanguage];
-    const { device, label } = await detectDevice();
-    s.ai = { status: 'loading', progress: 0, done: 0, total: 0, message: `loading ${model.label.split(' ')[0]} model on ${label}`, eta: null, uncertain: 0 };
-    this.emit();
-    try {
-      await this.asr.load(model.id, device, (frac, message) => {
-        s.ai.progress = frac;
-        s.ai.message = message;
-        this.emit();
-      });
-    } catch (e) {
-      s.ai = { ...s.ai, status: 'error', message: e instanceof Error ? e.message : String(e) };
-      return this.emit();
-    }
+    const language = await this.ensureModel();
+    if (language === false) return;
     const order = [...p.clips].sort(byStart);
     const todo = order.filter((c) => scope === 'all' || !c.text);
     s.ai = { status: 'running', progress: 0, done: 0, total: todo.length, message: 'transcribing', eta: null, uncertain: 0 };
@@ -1077,12 +1064,157 @@ class Store {
         for (const [k, v] of more) texts.set(k, v);
         this.applyTranscripts(more, s.ai.status === 'running');
       }
+      if (s.ai.status === 'running') {
+        const r = await this.wordRecut(language);
+        if (r.split || r.merged) this.toast(`by word: ${r.split} split · ${r.merged} merged`);
+      }
     }
     if (cancelled) {
       s.ai = { ...s.ai, status: 'cancelled', message: `stopped · ${texts.size} takes transcribed, lines not re-matched` };
     } else {
       s.ai = { ...s.ai, status: 'done', message: `${texts.size} takes transcribed · ${s.ai.uncertain} uncertain · u jumps to them` };
     }
+    this.emit();
+  }
+
+  /** Load the chosen model; returns the language to pass, or false when loading failed. */
+  private async ensureModel(): Promise<string | null | false> {
+    const s = this.state;
+    const model = MODELS[s.settings.asrModel];
+    const language = LANGUAGES[s.settings.asrLanguage];
+    const { device, label } = await detectDevice();
+    s.ai = { status: 'loading', progress: 0, done: 0, total: 0, message: `loading ${model.label.split(' ')[0]} model on ${label}`, eta: null, uncertain: s.ai.uncertain };
+    this.emit();
+    try {
+      await this.asr.load(model.id, device, (frac, message) => {
+        s.ai.progress = frac;
+        s.ai.message = message;
+        this.emit();
+      });
+      return language;
+    } catch (e) {
+      s.ai = { ...s.ai, status: 'error', message: e instanceof Error ? e.message : String(e) };
+      this.emit();
+      return false;
+    }
+  }
+
+  /** The quietest frame near a sample position, so cuts land between words, not on them. */
+  private snapQuiet(pos: number, window: number): number {
+    const an = this.state.analysis!;
+    const f0 = Math.max(0, Math.floor((pos - window) / an.frameLen));
+    const f1 = Math.min(an.db.length - 1, Math.ceil((pos + window) / an.frameLen));
+    let best = Math.round(pos / an.frameLen);
+    for (let f = f0; f <= f1; f++) if (an.db[f] < an.db[best]) best = f;
+    return best * an.frameLen + Math.floor(an.frameLen / 2);
+  }
+
+  /**
+   * Second pass on flagged takes using word timestamps: split reads that have no pause
+   * between them, separate false starts from the read that follows, and merge a line
+   * that a pause split in two. Everything is re-matched afterwards.
+   */
+  private async wordRecut(language: string | null): Promise<{ split: number; merged: number }> {
+    const s = this.state;
+    const p = s.project;
+    const src = s.source;
+    if (!p || !src || !s.analysis) return { split: 0, merged: 0 };
+    const sr = src.sampleRate;
+    const lineText = new Map(this.mine().map((l) => [l.n, l.text]));
+    const order = [...p.clips].sort(byStart);
+
+    // merges: two adjacent false-start halves of the same line that read as one line together
+    const merges: Array<[Clip, Clip]> = [];
+    for (let i = 0; i + 1 < order.length; i++) {
+      const a = order[i];
+      const b = order[i + 1];
+      if (a.kind !== 'partial' || b.kind !== 'partial' || a.lane !== b.lane || a.lane === TRASH || a.lane === JUNK) continue;
+      if (!a.line || a.line !== b.line || !a.text || !b.text || b.start - a.end > 2.5 * sr) continue;
+      const target = prepare(lineText.get(a.line) ?? '');
+      const both = similarity(prepare(`${a.text} ${b.text}`), target);
+      if (both >= 0.6 && both > Math.max(similarity(prepare(a.text), target), similarity(prepare(b.text), target)) + 0.1) {
+        merges.push([a, b]);
+        i++;
+      }
+    }
+    const inMerge = new Set(merges.flat().map((c) => c.id));
+
+    // splits: multi-read takes (including false start + read) still in one piece
+    const cands = order.filter((c) => !inMerge.has(c.id) && c.lane !== TRASH && c.kind === 'multi' && c.text && (c.reads ?? 0) >= 2);
+    s.ai = { ...s.ai, status: 'running', message: 'refining cuts by word', done: 0, total: cands.length, eta: null };
+    this.emit();
+    const texts = new Map<string, string>();
+    const replaced = new Map<string, Clip[]>();
+    const minLen = Math.round(0.25 * sr);
+    for (const c of cands) {
+      if (s.ai.status !== 'running') break;
+      let groups;
+      try {
+        const t = await this.asr.transcribeWords(await clipTo16k(src, c.start, c.end), language);
+        groups = groupWords(t.words, c.reads ?? 2, (c.end - c.start) / sr);
+      } catch {
+        s.ai.done++;
+        continue;
+      }
+      if (groups.length >= 2) {
+        const pieces: Clip[] = [];
+        let prevEnd = c.start;
+        for (let g = 0; g < groups.length; g++) {
+          const last = g === groups.length - 1;
+          const start = g === 0 ? c.start : prevEnd;
+          const end = last ? c.end : this.snapQuiet(c.start + Math.round(((groups[g].end + groups[g + 1].start) / 2) * sr), Math.round(0.15 * sr));
+          if (end - start < minLen && pieces.length) {
+            // too short to stand alone: fold into the previous piece
+            const prev = pieces[pieces.length - 1];
+            prev.end = end;
+            texts.set(prev.id, `${texts.get(prev.id)} ${groups[g].text}`);
+            prevEnd = end;
+            continue;
+          }
+          const id = pieces.length === 0 ? c.id : uid();
+          pieces.push({ id, start, end, lane: c.lane, line: c.line });
+          texts.set(id, groups[g].text);
+          prevEnd = end;
+        }
+        if (pieces.length >= 2) replaced.set(c.id, pieces);
+      }
+      s.ai.done++;
+      if (s.ai.done % 3 === 0) this.emit();
+    }
+
+    if (merges.length || replaced.size) {
+      this.player.stop();
+      s.playing = false;
+      const mergeInto = new Map(merges.map(([a, b]) => [a.id, b]));
+      const drop = new Set(merges.map(([, b]) => b.id));
+      this.commit((clips) =>
+        clips.flatMap((c) => {
+          if (drop.has(c.id)) return [];
+          const b = mergeInto.get(c.id);
+          if (b) return [{ ...c, end: b.end, text: `${c.text ?? ''} ${b.text ?? ''}`.trim(), kind: undefined, reads: undefined, conf: undefined }];
+          const r = replaced.get(c.id);
+          if (r) return r.map((x) => ({ ...x, text: texts.get(x.id) }));
+          return [c];
+        }),
+      );
+      const all = new Map<string, string>();
+      for (const c of this.state.project!.clips) if (c.text !== undefined) all.set(c.id, c.text);
+      this.applyTranscripts(all, true);
+    }
+    return { split: replaced.size, merged: merges.length };
+  }
+
+  /** Run the word-aware pass on its own, on takes that are already transcribed. */
+  async wordRecutNow() {
+    const s = this.state;
+    if (!s.project || !s.source) return;
+    if (s.ai.status === 'loading' || s.ai.status === 'running') return;
+    if (!s.project.clips.some((c) => c.text !== undefined)) return this.toast('nothing transcribed yet · w');
+    this.realign();
+    const language = await this.ensureModel();
+    if (language === false) return;
+    const r = await this.wordRecut(language);
+    s.ai = { ...s.ai, status: 'done', message: `re-cut by words · ${r.split} split · ${r.merged} merged · ${s.ai.uncertain} uncertain` };
     this.emit();
   }
 

@@ -517,8 +517,9 @@ function TranscribeModal() {
       <h2>transcribe</h2>
       <p class="lead">
         whisper runs on your gpu, inside this page. the model downloads once ({model.size}) and is cached; your audio never leaves the
-        machine. afterwards every take is matched to one of your lines, empty takes go to the junk lane, and takes with several reads are
-        re-cut.
+        machine. afterwards every take is matched to one of your lines, empty takes go to the junk lane, takes with several reads are
+        re-cut at the pauses, and the leftovers are re-cut by word: reads with no pause between them, false starts, and lines a pause
+        split in two.
       </p>
 
       <div class="row">
@@ -591,6 +592,11 @@ function TranscribeModal() {
             {withText > 0 && (
               <button class="k" disabled={!hasScript} title="use the stored transcripts; no gpu time" onClick={() => s.realign()}>
                 re-match lines
+              </button>
+            )}
+            {withText > 0 && (
+              <button class="k" disabled={!hasScript} title="word timestamps on flagged takes: split reads with no pause, separate false starts, merge split lines" onClick={() => void s.wordRecutNow()}>
+                re-cut by words
               </button>
             )}
             {withText > 0 && withText < p.clips.length && (

@@ -10,7 +10,10 @@ interface WorkerScope {
 }
 const ctx = self as unknown as WorkerScope;
 
-type Asr = (audio: Float32Array, opts: Record<string, unknown>) => Promise<{ text: string }>;
+type Asr = (
+  audio: Float32Array,
+  opts: Record<string, unknown>,
+) => Promise<{ text: string; chunks?: Array<{ text: string; timestamp: [number, number | null] }> }>;
 
 let asr: Asr | null = null;
 let loadedKey = '';
@@ -18,7 +21,7 @@ let loadedKey = '';
 ctx.onmessage = async (e: MessageEvent) => {
   const msg = e.data as
     | { type: 'load'; model: string; device: 'webgpu' | 'wasm' }
-    | { type: 'transcribe'; id: number; audio: Float32Array; language: string | null };
+    | { type: 'transcribe'; id: number; audio: Float32Array; language: string | null; words?: boolean };
 
   if (msg.type === 'load') {
     const key = `${msg.model}|${msg.device}`;
@@ -54,14 +57,17 @@ ctx.onmessage = async (e: MessageEvent) => {
         task: 'transcribe',
         chunk_length_s: long ? 30 : 0,
         stride_length_s: long ? 5 : 0,
-        return_timestamps: false,
+        return_timestamps: msg.words ? 'word' : false,
       });
-      ctx.postMessage({ type: 'result', id: msg.id, text: out.text ?? '' });
+      const words = msg.words
+        ? (out.chunks ?? []).map((c) => ({ text: c.text, start: c.timestamp?.[0] ?? null, end: c.timestamp?.[1] ?? null }))
+        : undefined;
+      ctx.postMessage({ type: 'result', id: msg.id, text: out.text ?? '', words });
     } catch (err) {
       // A take with no speech makes the model emit nothing and the library throw on
       // decoding an empty sequence. That is a silent take, not a failure.
       const message = err instanceof Error ? err.message : String(err);
-      if (/token_ids|non-empty/i.test(message)) return ctx.postMessage({ type: 'result', id: msg.id, text: '' });
+      if (/token_ids|non-empty/i.test(message)) return ctx.postMessage({ type: 'result', id: msg.id, text: '', words: [] });
       ctx.postMessage({ type: 'error', id: msg.id, message });
     }
   }

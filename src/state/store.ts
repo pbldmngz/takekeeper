@@ -572,9 +572,10 @@ class Store {
     this.state.playing = false;
     const b: Clip = { id: uid(), start: pos, end: c.end, lane: c.lane };
     this.commit((clips) => clips.flatMap((x) => (x.id === c.id ? [{ ...x, end: pos }, b] : [x])));
-    this.state.cursor = b.id;
-    this.state.pos = pos;
-    this.laneMemory.set(b.lane, b.id);
+    // stay on the first half, playhead back at its start so space reviews it
+    this.state.cursor = c.id;
+    this.state.pos = c.start;
+    this.laneMemory.set(c.lane, c.id);
     this.toast('Split');
     this.emit();
   }

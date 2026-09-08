@@ -373,6 +373,24 @@ function ExportModal() {
       </p>
 
       <div class="row">
+        <label>{t('lane')}</label>
+        <div class="val">
+          <select value={lane} onChange={(e) => setLane(Number((e.target as HTMLSelectElement).value))}>
+            {p.laneNames.map((n, i) => (
+              <option value={i}>
+                {laneLabel(n)} · {laneClips(p, i).length}
+              </option>
+            ))}
+            <option value={JUNK}>
+              {laneLabel('Junk')} · {laneClips(p, JUNK).length}
+            </option>
+            <option value={TRASH}>
+              {laneLabel('Trash')} · {laneClips(p, TRASH).length}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
         <label>
           {t('order')}
           <small>
@@ -390,24 +408,6 @@ function ExportModal() {
               {t('by time')}
             </button>
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <label>{t('lane')}</label>
-        <div class="val">
-          <select value={lane} onChange={(e) => setLane(Number((e.target as HTMLSelectElement).value))}>
-            {p.laneNames.map((n, i) => (
-              <option value={i}>
-                {laneLabel(n)} · {laneClips(p, i).length}
-              </option>
-            ))}
-            <option value={JUNK}>
-              {laneLabel('Junk')} · {laneClips(p, JUNK).length}
-            </option>
-            <option value={TRASH}>
-              {laneLabel('Trash')} · {laneClips(p, TRASH).length}
-            </option>
-          </select>
         </div>
       </div>
       <div class="row">

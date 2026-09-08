@@ -501,7 +501,7 @@ function ExportModal() {
                   type="number"
                   min={0}
                   max={30}
-                  step={0.5}
+                  step={0.25}
                   value={st.gapClip}
                   onChange={(e) => s.updateSettings({ gapClip: Math.max(0, Number((e.target as HTMLInputElement).value) || 0) })}
                 />
@@ -509,7 +509,7 @@ function ExportModal() {
                   type="number"
                   min={0}
                   max={30}
-                  step={0.5}
+                  step={0.25}
                   value={st.gapLine}
                   onChange={(e) => s.updateSettings({ gapLine: Math.max(0, Number((e.target as HTMLInputElement).value) || 0) })}
                 />

@@ -9,7 +9,7 @@ account, no server.
 1. **Load** a WAV (any length) or a short MP3/FLAC/OGG. Silence between takes is detected and every take becomes a clip in the *Unsorted* lane.
 2. **Listen.** Clips autoplay one after another. `Enter` promotes a take to the next lane, `Backspace` trashes it. Do a second pass on *Pass 1*, a third on *Pass 2*, until *Final* holds the keepers.
 3. **Fix cuts** without leaving the keyboard: split, merge neighbours back together, nudge the start and end by a frame, all with undo.
-4. **Export** the *Final* lane as numbered WAV files straight into a folder (Chrome/Edge), as a zip, or as one merged file. Folder and zip exports include tiny silent gap files (1 s after each take, 2 s between lines, adjustable) numbered to sort in place, so the folder drops onto one DAW track with the spacing already there.
+4. **Export** the *Final* lane as numbered WAV files straight into a folder (Chrome/Edge), as a zip, or as one merged file. Folder and zip exports include tiny silent gap files (0.75 s after each take, 1.5 s between lines, adjustable) numbered to sort in place, so the folder drops onto one DAW track with the spacing already there.
 
 Lanes, cuts and script line marks are saved in the browser and restored when you open the same file again.
 

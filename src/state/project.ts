@@ -64,8 +64,8 @@ export const DEFAULT_SETTINGS: Settings = {
   autoJunk: true,
   autoSplit: true,
   spacers: true,
-  gapClip: 1,
-  gapLine: 2,
+  gapClip: 0.75,
+  gapLine: 1.5,
   exportByLine: true,
   lang: 'auto',
   toured: false,
@@ -172,6 +172,10 @@ export function loadSettings(): Settings {
     if (raw) {
       const stored = JSON.parse(raw) as Partial<Settings>;
       if (stored.stepMs === 10) stored.stepMs = 15; // old default, bumped 50%
+      if (stored.gapClip === 1 && stored.gapLine === 2) {
+        stored.gapClip = 0.75; // old defaults, tightened
+        stored.gapLine = 1.5;
+      }
       return { ...DEFAULT_SETTINGS, ...stored };
     }
   } catch {

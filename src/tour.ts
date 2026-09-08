@@ -27,7 +27,7 @@ export const TOUR: TourStep[] = [
     sel: ['.script'],
     place: 'left',
     title: 'script [[t]] · transcribe [[w]]',
-    body: 'paste your script and pick your character. whisper then reads every take on your own gpu, inside this page, and matches it to a line. nothing is uploaded.',
+    body: 'paste your script and pick your character. every take is then transcribed on your own gpu, inside this page, and matched to its line. nothing is uploaded.',
   },
   {
     sel: ['.script .lines', '.script .placeholder', '.script'],

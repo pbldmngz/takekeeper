@@ -35,6 +35,7 @@ export interface Settings extends DetectParams {
   spacers: boolean; // export silent gap files between takes
   gapClip: number; // seconds after every take
   gapLine: number; // seconds when the next take is another line
+  exportByLine: boolean; // number exported takes in script order rather than recording order
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -60,6 +61,7 @@ export const DEFAULT_SETTINGS: Settings = {
   spacers: true,
   gapClip: 1,
   gapLine: 2,
+  exportByLine: true,
 };
 
 export interface Project {

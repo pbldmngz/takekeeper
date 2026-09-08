@@ -269,7 +269,13 @@ function ExportModal() {
   const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const clips = laneClips(p, lane);
+  const timeOrder = laneClips(p, lane);
+  // script order only means something once takes carry lines (marks or transcription)
+  const hasLines = timeOrder.some((c) => s.lineOf(c) !== undefined);
+  const byLine = s.state.settings.exportByLine && hasLines;
+  const clips = byLine
+    ? [...timeOrder].sort((a, b) => (s.ordinal(s.lineOf(a)) ?? Infinity) - (s.ordinal(s.lineOf(b)) ?? Infinity) || a.start - b.start)
+    : timeOrder;
   const total = clips.reduce((a, c) => a + (c.end - c.start), 0) / src.sampleRate;
   const fade = Math.round((s.state.settings.fadeMs / 1000) * src.sampleRate);
   const lines = clips.map((c) => s.ordinal(s.lineOf(c)));
@@ -342,8 +348,28 @@ function ExportModal() {
   return (
     <div class="modal">
       <h2>export</h2>
-      <p class="lead">clips are numbered in recording order, so sorting by name keeps them chronological.</p>
+      <p class="lead">
+        {byLine
+          ? 'clips are numbered in script order, then by recording time within a line, so sorting by name plays your lines in order.'
+          : 'clips are numbered in recording order, so sorting by name keeps them chronological.'}
+      </p>
 
+      <div class="row">
+        <label>
+          order
+          <small>{hasLines ? 'by line: script order, recording order within a line. takes without a line go last.' : 'recording order; by line becomes available once takes have lines (marks or transcription).'}</small>
+        </label>
+        <div class="val">
+          <div class="seg">
+            <button class={st.exportByLine && hasLines ? 'on' : ''} disabled={!hasLines} onClick={() => s.updateSettings({ exportByLine: true })}>
+              by line
+            </button>
+            <button class={!st.exportByLine || !hasLines ? 'on' : ''} onClick={() => s.updateSettings({ exportByLine: false })}>
+              by time
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="row">
         <label>lane</label>
         <div class="val">

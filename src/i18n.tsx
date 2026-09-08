@@ -407,6 +407,18 @@ export const resolveLang = (setting: LangSetting): Lang => (setting === 'auto' ?
 
 export const langUrl = (l: Lang) => (l === 'es' ? '/es/' : '/');
 
+/** The language the browser asks for. */
+export const browserLang = (): Lang => ((navigator.languages?.[0] ?? navigator.language ?? '').toLowerCase().startsWith('es') ? 'es' : 'en');
+
+/**
+ * Where a visitor should be, or null to stay. A chosen language always wins. On auto, a Spanish browser
+ * opening the English page goes to /es/; the reverse never redirects, so crawlers (English) reach /es/.
+ */
+export function redirectFor(setting: LangSetting, page: Lang, browser: Lang): string | null {
+  if (setting !== 'auto') return setting === page ? null : langUrl(setting);
+  return page === 'en' && browser === 'es' ? langUrl('es') : null;
+}
+
 export function setLang(l: Lang) {
   current = l;
 }

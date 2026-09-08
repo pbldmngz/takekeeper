@@ -15,6 +15,7 @@ interface Meta {
   ogDescription: string;
   appDescription: string;
   audience: string;
+  ogImage?: string;
 }
 
 const EN: Meta = {
@@ -97,6 +98,10 @@ export function localize(html: string, lang: 'en' | 'es'): string {
     html = setTag(html, /<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${attr(meta.ogTitle)}" />`);
     html = setTag(html, /<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${attr(meta.ogDescription)}" />`);
     html = setTag(html, /<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${url}" />`);
+    if (meta.ogImage) {
+      html = setTag(html, /<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${meta.ogImage}" />`);
+      html = setTag(html, /<meta name="twitter:image" content="[^"]*" \/>/, `<meta name="twitter:image" content="${meta.ogImage}" />`);
+    }
     html = setTag(html, /<meta property="og:locale" content="[^"]*" \/>/, '<meta property="og:locale" content="es_ES" />');
     html = setTag(html, /<meta property="og:locale:alternate" content="[^"]*" \/>/, '<meta property="og:locale:alternate" content="en_US" />');
     html = setTag(html, /<!-- hero -->[\s\S]*?<!-- \/hero -->/, `<!-- hero -->\n${es.hero}\n      <!-- /hero -->`);

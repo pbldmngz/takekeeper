@@ -1,14 +1,14 @@
 import { render } from 'preact';
-import { PAGE_LANG, langUrl } from './i18n';
+import { PAGE_LANG, browserLang, redirectFor } from './i18n';
 import { installKeys } from './state/keys';
 import { store } from './state/store';
 import { App } from './ui/App';
 import './styles.css';
 
-// A chosen language wins over the page opened: / for English, /es/ for Spanish. Auto follows the page.
-const want = store.state.settings.lang;
-if (want !== 'auto' && want !== PAGE_LANG) {
-  location.replace(langUrl(want));
+// Visitors land in their language: a Spanish browser opening / goes to /es/; a chosen language always wins.
+const go = redirectFor(store.state.settings.lang, PAGE_LANG, browserLang());
+if (go) {
+  location.replace(go);
 } else {
   if (import.meta.env.DEV) (window as unknown as { __tk: typeof store }).__tk = store;
   installKeys();

@@ -27,7 +27,7 @@ export const TOUR: TourStep[] = [
     sel: ['.script'],
     place: 'left',
     title: 'script [[t]] · transcribe [[w]]',
-    body: 'paste your script, pick your character. transcribing is a pass of its own, on your gpu inside this page: it refines the cuts and files every take under its line. it gets some wrong, so skim **junk** first.',
+    body: 'paste your script, pick your character. transcribing is a pass of its own, on your gpu inside this page: it refines the cuts and files every take under its line. or file them by hand with [[l]]. it gets some wrong, so skim **junk** first.',
   },
   {
     sel: ['.script .lines', '.script .placeholder', '.script'],

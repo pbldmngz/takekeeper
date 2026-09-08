@@ -8,6 +8,7 @@ export function ScriptPanel() {
   const { project: p, scriptEditing, lineMode, lineFilter, showContext } = s.state;
   const ta = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const anchor = useRef<number | null>(null); // row to keep in view across a cues toggle
   if (!p) return null;
 
   const all = s.script();
@@ -33,6 +34,28 @@ export function ScriptPanel() {
     el?.scrollIntoView({ block: 'nearest' });
   }, [focusLine, editing]);
 
+  /** Cues come and go, so the list is a different length: put the row you were reading back in view. */
+  const toggleCues = () => {
+    const list = listRef.current;
+    const top = list?.getBoundingClientRect().top ?? 0;
+    const first = [...(list?.querySelectorAll<HTMLElement>('[data-n]') ?? [])].find((r) => r.getBoundingClientRect().bottom > top + 1);
+    anchor.current = focusLine ?? (first ? Number(first.dataset.n) : null);
+    s.toggleContext();
+  };
+
+  useEffect(() => {
+    const n = anchor.current;
+    anchor.current = null;
+    const list = listRef.current;
+    if (n === null || editing || !list) return;
+    const rows = [...list.querySelectorAll<HTMLElement>('[data-n]')];
+    // that row when it survived the toggle, otherwise the nearest row that did
+    const el =
+      rows.find((r) => Number(r.dataset.n) === n) ??
+      rows.reduce<HTMLElement | null>((best, r) => (!best || Math.abs(Number(r.dataset.n) - n) < Math.abs(Number(best.dataset.n) - n) ? r : best), null);
+    el?.scrollIntoView({ block: 'center' });
+  }, [showContext]);
+
   return (
     <aside class="script">
       <div class="head">
@@ -54,7 +77,7 @@ export function ScriptPanel() {
             </select>
           )}
           {!editing && hasChars && (
-            <button class={`k${showContext ? ' amber' : ''}`} onClick={() => s.toggleContext()} title={t('show every row, not only your lines')}>
+            <button class={`k${showContext ? ' amber' : ''}`} onClick={toggleCues} title={t('show every row, not only your lines')}>
               {t('cues')}
             </button>
           )}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { buildZip, canSaveFolder, clipBlob, mergedBlob, saveBlob, saveToFolder, type Entry } from '../audio/export';
 import { silenceBytes, wavHeader } from '../audio/wav';
-import { TRASH, finalLane, laneClips } from '../state/project';
+import { JUNK, TRASH, finalLane, laneClips } from '../state/project';
 import { useStore } from '../state/store';
 import { MODELS, detectDevice } from '../ai/transcriber';
 import { T, laneLabel, t, type Key } from '../i18n';
@@ -274,7 +274,11 @@ function ExportModal() {
   const s = useStore();
   const p = s.state.project!;
   const src = s.state.source!;
-  const [lane, setLane] = useState(finalLane(p));
+  const [lane, setLane] = useState(() => {
+    // the furthest lane you actually filled: final when you got there, otherwise the last pass with takes
+    for (let i = finalLane(p); i > 0; i--) if (p.clips.some((c) => c.lane === i)) return i;
+    return p.clips.some((c) => c.lane === 0) ? 0 : finalLane(p);
+  });
   const [mode, setMode] = useState<Mode>(canSaveFolder ? 'folder' : 'zip');
   const [gap, setGap] = useState(0.5);
   const [prefix, setPrefix] = useState(stem(src.name));
@@ -393,10 +397,16 @@ function ExportModal() {
         <div class="val">
           <select value={lane} onChange={(e) => setLane(Number((e.target as HTMLSelectElement).value))}>
             {p.laneNames.map((n, i) => (
-              <option value={i}>{laneLabel(n)}</option>
+              <option value={i}>
+                {laneLabel(n)} · {laneClips(p, i).length}
+              </option>
             ))}
-            <option value={-2}>{laneLabel('Junk')}</option>
-            <option value={TRASH}>{laneLabel('Trash')}</option>
+            <option value={JUNK}>
+              {laneLabel('Junk')} · {laneClips(p, JUNK).length}
+            </option>
+            <option value={TRASH}>
+              {laneLabel('Trash')} · {laneClips(p, TRASH).length}
+            </option>
           </select>
         </div>
       </div>
@@ -523,7 +533,9 @@ function ExportModal() {
         </div>
       )}
       <div class="foot">
-        <span class="left">{done ?? (mode === 'folder' ? t('pick a folder; files are written directly into it.') : '')}</span>
+        <span class="left">
+          {done ?? (!clips.length ? t('this lane is empty · pick another above') : mode === 'folder' ? t('pick a folder; files are written directly into it.') : '')}
+        </span>
         <button class="k" onClick={() => s.openModal(null)}>
           {t('close')}
         </button>
@@ -692,40 +704,42 @@ function TranscribeModal() {
 
       <div class="foot">
         <span class="left">{hasScript ? t('you can keep sorting while it runs; the banner shows progress.') : t('paste the script first (t) so takes have lines to match.')}</span>
-        <button class="k" onClick={() => s.openModal(null)}>
-          {t('close')}
-        </button>
-        {busy ? (
-          <button class="k" onClick={() => s.cancelTranscribe()}>
-            {t('cancel')}
+        <span class="acts">
+          <button class="k" onClick={() => s.openModal(null)}>
+            {t('close')}
           </button>
-        ) : (
-          <>
-            {withText > 0 && (
-              <button class="k" disabled={!hasScript} title={t('use the stored transcripts; no gpu time')} onClick={() => s.realign()}>
-                {t('re-match lines')}
-              </button>
-            )}
-            {withText > 0 && (
-              <button
-                class="k"
-                disabled={!hasScript}
-                title={t('word timestamps on flagged takes: split reads with no pause, separate false starts, merge split lines')}
-                onClick={() => void s.wordRecutNow()}
-              >
-                {t('re-cut by words')}
-              </button>
-            )}
-            {withText > 0 && withText < p.clips.length && (
-              <button class="k" disabled={!hasScript} onClick={() => void s.transcribe('missing')}>
-                {t('only new takes')}
-              </button>
-            )}
-            <button class="k amber" disabled={!hasScript} onClick={() => void s.transcribe('all')}>
-              {withText ? t('transcribe all again') : t('transcribe all takes')}
+          {busy ? (
+            <button class="k" onClick={() => s.cancelTranscribe()}>
+              {t('cancel')}
             </button>
-          </>
-        )}
+          ) : (
+            <>
+              {withText > 0 && (
+                <button class="k" disabled={!hasScript} title={t('use the stored transcripts; no gpu time')} onClick={() => s.realign()}>
+                  {t('re-match lines')}
+                </button>
+              )}
+              {withText > 0 && (
+                <button
+                  class="k"
+                  disabled={!hasScript}
+                  title={t('word timestamps on flagged takes: split reads with no pause, separate false starts, merge split lines')}
+                  onClick={() => void s.wordRecutNow()}
+                >
+                  {t('re-cut by words')}
+                </button>
+              )}
+              {withText > 0 && withText < p.clips.length && (
+                <button class="k" disabled={!hasScript} onClick={() => void s.transcribe('missing')}>
+                  {t('only new takes')}
+                </button>
+              )}
+              <button class="k amber" disabled={!hasScript} onClick={() => void s.transcribe('all')}>
+                {withText ? t('transcribe all again') : t('transcribe all takes')}
+              </button>
+            </>
+          )}
+        </span>
       </div>
     </div>
   );

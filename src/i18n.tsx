@@ -39,8 +39,8 @@ const es = {
   'as many rounds as you want: each one keeps fewer takes, until the last lane holds one per line. [[tab]] changes lane, [[,]] renames them.':
     'tantas rondas como quieras: cada una guarda menos tomas, hasta que el último carril tenga una por línea. [[tab]] cambia de carril, [[,]] los renombra.',
   'script [[t]] · transcribe [[w]]': 'guion [[t]] · transcribir [[w]]',
-  'paste your script and pick your character. every take is then transcribed on your own gpu, inside this page, and matched to its line. nothing is uploaded.':
-    'pega tu guion y elige tu personaje. cada toma se transcribe en tu propia gpu, dentro de esta página, y se empareja con su línea. no se sube nada.',
+  'paste your script, pick your character. transcribing is a pass of its own, on your gpu inside this page: it refines the cuts and files every take under its line. it gets some wrong, so skim **junk** first.':
+    'pega tu guion, elige tu personaje. transcribir es un paso aparte, en tu gpu y dentro de esta página: afina los cortes y archiva cada toma bajo su línea. se equivoca en algunas, así que repasa **basura** primero.',
   'one line at a time [[g]]': 'una línea cada vez [[g]]',
   'hear every take of a line back to back and keep the best. [[shift ↑↓]] moves between lines.':
     'escucha seguidas todas las tomas de una línea y quédate con la mejor. [[shift ↑↓]] cambia de línea.',

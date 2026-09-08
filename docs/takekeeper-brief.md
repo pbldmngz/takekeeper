@@ -184,7 +184,8 @@ One editor screenshot with a real session loaded and transcribed, mid-sort, is e
 ## 12. Facts for quick reference
 
 - Name: Takekeeper. Domain: takekeeper.com. Free. No sign-up.
-- Runs in the browser; built with Vite, TypeScript and Preact; hosted on Vercel as a static site.
+- Runs in the browser; built with Vite, TypeScript and Preact; hosted on Vercel as a static site. Installable on the desktop (Chrome, Edge) and the app itself opens offline after the first visit.
+- First run in the editor shows four cards: keep or drop, lanes are passes, script and transcribe, one line at a time.
 - Speech recognition: OpenAI Whisper (small / base), run locally via transformers.js and WebGPU, using the `_timestamped` ONNX exports for word timestamps.
 - Languages tuned: Spanish, English. Auto-detect for others.
 - Interface and landing page in English (takekeeper.com) and Spanish (takekeeper.com/es/); the app follows the page you open, or a language chosen in settings.

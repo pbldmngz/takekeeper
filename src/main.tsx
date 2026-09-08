@@ -11,6 +11,10 @@ if (go) {
   location.replace(go);
 } else {
   if (import.meta.env.DEV) (window as unknown as { __tk: typeof store }).__tk = store;
+  // installable on the desktop, and the app itself opens offline after the first visit
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    addEventListener('load', () => void navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
   installKeys();
   const app = document.getElementById('app')!;
   app.replaceChildren(); // the static hero was for crawlers

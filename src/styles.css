@@ -581,6 +581,55 @@ footer.site .site-legal {
   gap: 2px 10px;
 }
 
+/* first-run tour ---------------------------------------------------------- */
+
+.tour-ring {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  border: 1px solid var(--amber);
+  box-shadow: 0 0 0 1px var(--ink), 0 0 22px var(--amber-dim);
+}
+.tour {
+  position: fixed;
+  z-index: 61;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  padding: 14px 16px 12px;
+  background: var(--ink-2);
+  border: 1px solid var(--rule-2);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+  display: grid;
+  gap: 8px;
+}
+.tour h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--amber);
+}
+.tour h3::before {
+  content: '◆ ';
+  color: var(--amber);
+}
+.tour p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.tour .foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.tour .foot .n {
+  margin-right: auto;
+  color: var(--dim);
+  font-size: 12px;
+}
+
 /* editor ---------------------------------------------------------------- */
 
 .editor {

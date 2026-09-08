@@ -625,6 +625,11 @@ function HelpModal() {
             {t('suggest a feature')}
           </a>
         </span>
+        {s.state.phase === 'ready' && (
+          <button class="k" onClick={() => s.startTour()}>
+            {t('tour')}
+          </button>
+        )}
         <button class="k" onClick={() => s.openModal(null)}>
           {t('close')} <kbd>esc</kbd>
         </button>

@@ -39,6 +39,7 @@ export interface Settings extends DetectParams {
   gapLine: number; // seconds when the next take is another line
   exportByLine: boolean; // number exported takes in script order rather than recording order
   lang: LangSetting; // interface language; auto follows the page (/ or /es/)
+  toured: boolean; // the four cards on first entry to the editor have been seen
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gapLine: 2,
   exportByLine: true,
   lang: 'auto',
+  toured: false,
 };
 
 export interface Project {

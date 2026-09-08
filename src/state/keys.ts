@@ -8,6 +8,18 @@ export function installKeys() {
     const s = store.state;
     const mod = e.ctrlKey || e.metaKey;
 
+    if (s.tour !== null) {
+      if (e.key === 'Escape' || (e.key === 'ArrowRight' && s.tour === -1)) return void store.endTour();
+      if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        return store.tourStep(1);
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        return store.tourStep(-1);
+      }
+    }
+
     if (e.key === 'Escape') {
       if (s.modal) store.openModal(null);
       else if (s.scriptEditing) store.setScriptEditing(false);

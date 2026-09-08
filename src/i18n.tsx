@@ -31,6 +31,19 @@ const es = {
   'listening for takes…': 'buscando tomas…',
   'switch to spanish': 'cambiar a español',
   'back to the landing': 'volver al inicio',
+  tour: 'guía',
+  skip: 'saltar',
+  'keep it or drop it': 'quédate o tira',
+  'takes play one after another. [[enter]] keeps one, [[⌫]] drops it.': 'las tomas suenan una tras otra. [[enter]] se queda con una, [[⌫]] la tira.',
+  'lanes are your passes': 'los carriles son tus pasadas',
+  'as many rounds as you want: each one keeps fewer takes, until the last lane holds one per line. [[tab]] changes lane, [[,]] renames them.':
+    'tantas rondas como quieras: cada una guarda menos tomas, hasta que el último carril tenga una por línea. [[tab]] cambia de carril, [[,]] los renombra.',
+  'script [[t]] · transcribe [[w]]': 'guion [[t]] · transcribir [[w]]',
+  'paste your script and pick your character. whisper then reads every take on your own gpu, inside this page, and matches it to a line. nothing is uploaded.':
+    'pega tu guion y elige tu personaje. whisper lee cada toma en tu propia gpu, dentro de esta página, y la empareja con una línea. no se sube nada.',
+  'one line at a time [[g]]': 'una línea cada vez [[g]]',
+  'hear every take of a line back to back and keep the best. [[shift ↑↓]] moves between lines.':
+    'escucha seguidas todas las tomas de una línea y quédate con la mejor. [[shift ↑↓]] cambia de línea.',
   'report a bug': 'reportar un bug',
   'suggest a feature': 'sugerir una mejora',
   'switch to english': 'cambiar a inglés',

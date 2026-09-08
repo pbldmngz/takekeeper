@@ -29,6 +29,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -237,6 +238,10 @@
         <details>
           <summary>which browsers work?</summary>
           <p>chrome and edge on desktop get everything, including transcription, saving straight into a folder, and reopening your session with one click. firefox sorts fine but downloads a zip and has no webgpu, so transcription falls back to the cpu and is slow. it is a keyboard tool, so phones and tablets are not the target.</p>
+        </details>
+        <details>
+          <summary>can i install it like an app?</summary>
+          <p>yes. in chrome or edge on the desktop the address bar shows an install button, and takekeeper then opens in its own window with no browser tabs. after the first visit the app itself works offline, and the speech model stays cached from the first time you transcribe. same app either way, same sessions.</p>
         </details>
         <details>
           <summary>can i record directly in takekeeper?</summary>

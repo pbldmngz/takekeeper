@@ -1,0 +1,18 @@
+{
+  "name": "Takekeeper",
+  "short_name": "Takekeeper",
+  "description": "Split a voice-over session into takes and keep the good ones.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#070c12",
+  "theme_color": "#070c12",
+  "categories": ["productivity", "music", "utilities"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -6,6 +6,7 @@ import { saveBlob } from '../audio/export';
 import { clipTo16k } from '../ai/audio';
 import { UNCERTAIN, alignTakes, cleanTranscript, diagnose, groupWords, prepare, similarity } from '../ai/align';
 import { LANGUAGES, MODELS, Transcriber, detectDevice } from '../ai/transcriber';
+import { TOUR } from '../tour';
 import { clamp, fmtTime, stem, uid } from '../util';
 import { laneLabel, langUrl, resolveLang, setLang, t, type Lang } from '../i18n';
 import {
@@ -74,6 +75,7 @@ export interface AppState {
   lineMode: boolean; // the lane is filtered to one script line
   lineFilter: number | null; // that line (global n)
   showContext: boolean; // script panel shows other characters and directions too
+  tour: number | null; // step of the first-run tour, null when it is not up
   ai: AiState;
 }
 
@@ -103,6 +105,7 @@ class Store {
     lineMode: false,
     lineFilter: null,
     showContext: false,
+    tour: null,
     ai: { status: 'idle', progress: 0, done: 0, total: 0, message: '', eta: null, uncertain: 0 },
   };
 
@@ -335,6 +338,7 @@ class Store {
       s.lineMode = false;
       s.lineFilter = null;
       s.phase = 'ready';
+      this.maybeTour();
       s.progress = null;
       s.status = '';
       const first = this.laneList(0)[0] ?? s.project!.clips.sort(byStart)[0];
@@ -417,6 +421,7 @@ class Store {
     // still in memory from this session: no file dialog, no re-read
     if (this.state.source && this.state.project?.key === key) {
       this.state.phase = 'ready';
+      this.maybeTour();
       this.state.error = null;
       this.emit();
       return;
@@ -1422,6 +1427,32 @@ class Store {
     const next = list.slice(from + 1).find(isDoubtful) ?? list.slice(0, from + 1).find(isDoubtful);
     if (!next) return this.toast(t('no uncertain takes in this lane'));
     this.gotoClip(next.id, { play: true });
+  }
+
+  // ---------- the first run ----------
+
+  private maybeTour() {
+    if (!this.state.settings.toured) this.state.tour = 0;
+  }
+
+  startTour() {
+    this.state.tour = 0;
+    this.state.modal = null;
+    this.emit();
+  }
+
+  tourStep(dir: 1 | -1) {
+    const n = (this.state.tour ?? 0) + dir;
+    if (n < 0) return;
+    if (n >= TOUR.length) return this.endTour();
+    this.state.tour = n;
+    this.emit();
+  }
+
+  endTour() {
+    this.state.tour = null;
+    if (this.state.settings.toured) this.emit();
+    else this.updateSettings({ toured: true }); // emits
   }
 
   // ---------- ui ----------

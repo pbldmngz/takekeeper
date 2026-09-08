@@ -1002,9 +1002,20 @@ class Store {
     if (!c) return;
     if (n <= 0) {
       this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, line: undefined } : x)));
+      if (this.state.lineMode) {
+        // the take now inherits whatever the clip before it carries; follow it there, or show the lane again
+        const now = this.lineOf(c);
+        if (now) this.state.lineFilter = now;
+        else {
+          this.state.lineMode = false;
+          this.state.lineFilter = null;
+        }
+      }
       return this.toast(t('line mark removed'));
     }
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, line: n } : x)));
+    // in line mode the take has just left the filtered list: take the filter with it, cursor and playhead untouched
+    if (this.state.lineMode) this.state.lineFilter = n;
     const txt = this.lineText(n);
     this.toast(t('line {n}', { n: this.ordinal(n) ?? n }) + (txt ? ' · ' + txt.slice(0, 56) : ''));
   }

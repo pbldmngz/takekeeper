@@ -6,7 +6,7 @@ const isTyping = (t: EventTarget | null) =>
 export function installKeys() {
   window.addEventListener('keydown', (e) => {
     const s = store.state;
-    const mod = e.ctrlKey || e.metaKey;
+    const mod = (e.ctrlKey || e.metaKey) && !e.altKey; // altgr is ctrl+alt on windows and types [ ] on many layouts
 
     if (s.tour !== null) {
       if (e.key === 'Escape' || (e.key === 'ArrowRight' && s.tour === -1)) return void store.endTour();

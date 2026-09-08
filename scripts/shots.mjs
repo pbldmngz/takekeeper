@@ -92,7 +92,18 @@ try {
     // 2. right after detection: no saved sorting, every take in unsorted, junk empty
     await page.evaluate(() => Promise.all(window.__tk.state.sessions.map((s) => window.__tk.discard(s.key))));
     await feed(page, WAV);
-    if (STATES.has(2)) await shot(page, '02-detected');
+    if (STATES.has(2)) {
+      // not the first take (a quiet slate at 0:00): a full-bodied one a couple of minutes in
+      await page.evaluate(() => {
+        const tk = window.__tk;
+        const sr = tk.state.source.sampleRate;
+        const c = [...tk.state.project.clips]
+          .sort((a, b) => a.start - b.start)
+          .find((c) => c.start > 120 * sr && (c.end - c.start) / sr >= 1.5 && (c.end - c.start) / sr <= 3.5);
+        if (c) tk.gotoClip(c.id, { play: false });
+      });
+      await shot(page, '02-detected');
+    }
 
     // the sorted, transcribed project on top of the same recording
     await feed(page, PROJECT);
@@ -139,14 +150,15 @@ try {
       await page.evaluate(() => window.__tk.openModal(null));
     }
 
-    // 6. junk lane, on the take that makes the point: real words that still landed there
+    // 6. junk lane, on a take that looks like junk: flagged by the transcription, a word or two of transcript
     if (STATES.has(6)) {
       await page.evaluate(() => {
         const tk = window.__tk;
         tk.setLane(-2);
         const junk = tk.state.project.clips.filter((c) => c.lane === -2);
-        const words = (c) => new Set((c.text ?? '').toLowerCase().match(/\p{L}{2,}/gu) ?? []).size;
-        const pick = [...junk].sort((a, b) => words(b) - words(a) || (b.text?.length ?? 0) - (a.text?.length ?? 0))[0];
+        const words = (c) => (c.text ?? '').match(/\p{L}+/gu)?.length ?? 0;
+        const score = (c) => (c.kind === 'junk' ? 10 : 0) + (words(c) === 2 ? 3 : words(c) === 1 || words(c) === 3 ? 2 : 0) + Math.min(c.text?.length ?? 0, 12) / 12;
+        const pick = [...junk].sort((a, b) => score(b) - score(a))[0];
         if (pick) tk.gotoClip(pick.id, { play: false });
       });
       await shot(page, '06-junk');

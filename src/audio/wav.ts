@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 // Byte-level audio source. WAV files are never decoded whole: analysis streams
 // through them in chunks and clips are lazy Blob.slice() views onto the file.
 
@@ -39,7 +40,7 @@ export async function openAudio(file: File): Promise<Source> {
     return openWav(file, head);
   }
   if (head.byteLength >= 4 && ascii(head, 0, 4) === 'RF64') {
-    throw new Error('RF64 WAV files (over 4 GB) are not supported yet.');
+    throw new Error(t('RF64 WAV files (over 4 GB) are not supported yet.'));
   }
   return openCompressed(file);
 }
@@ -58,9 +59,9 @@ function openWav(file: File, head: DataView): Source {
       const sampleRate = head.getUint32(pos + 12, true);
       const bits = head.getUint16(pos + 22, true);
       if (tag === 0xfffe && size >= 40) tag = head.getUint16(pos + 8 + 24, true);
-      if (tag !== 1 && tag !== 3) throw new Error('Unsupported WAV encoding - only PCM and float WAV are supported.');
-      if (![8, 16, 24, 32].includes(bits)) throw new Error(`Unsupported bit depth: ${bits}-bit.`);
-      if (tag === 3 && bits !== 32) throw new Error('Only 32-bit float WAV is supported.');
+      if (tag !== 1 && tag !== 3) throw new Error(t('Unsupported WAV encoding - only PCM and float WAV are supported.'));
+      if (![8, 16, 24, 32].includes(bits)) throw new Error(t('Unsupported bit depth: {bits}-bit.', { bits }));
+      if (tag === 3 && bits !== 32) throw new Error(t('Only 32-bit float WAV is supported.'));
       fmt = mkFmt(channels, sampleRate, bits, tag === 3);
     } else if (id === 'data') {
       dataOff = pos + 8;
@@ -69,7 +70,7 @@ function openWav(file: File, head: DataView): Source {
     }
     pos += 8 + size + (size & 1);
   }
-  if (!fmt || dataOff < 0) throw new Error('Could not find the audio data in this WAV file.');
+  if (!fmt || dataOff < 0) throw new Error(t('Could not find the audio data in this WAV file.'));
   const avail = file.size - dataOff;
   if (dataLen === 0 || dataLen === 0xffffffff || dataLen > avail) dataLen = avail;
   dataLen -= dataLen % fmt.blockAlign;
@@ -91,18 +92,18 @@ function openWav(file: File, head: DataView): Source {
 // decoded file in memory - fine for short files, impossible for an hour.
 async function openCompressed(file: File): Promise<Source> {
   if (file.size > 250 * 1024 * 1024) {
-    throw new Error('Compressed files over 250 MB cannot be decoded in the browser. Convert to WAV first.');
+    throw new Error(t('Compressed files over 250 MB cannot be decoded in the browser. Convert to WAV first.'));
   }
   let ab: AudioBuffer;
   try {
     ab = await new OfflineAudioContext(1, 1, 48000).decodeAudioData(await file.arrayBuffer());
   } catch {
-    throw new Error('Could not decode this file. WAV works best; MP3, FLAC, OGG and M4A work for shorter recordings.');
+    throw new Error(t('Could not decode this file. WAV works best; MP3, FLAC, OGG and M4A work for shorter recordings.'));
   }
   const ch = ab.numberOfChannels;
   const n = ab.length;
   if (n * ch * 3 > 450e6) {
-    throw new Error('This compressed file is too long to decode in the browser. Convert it to WAV first.');
+    throw new Error(t('This compressed file is too long to decode in the browser. Convert it to WAV first.'));
   }
   const fmt = mkFmt(ch, ab.sampleRate, 24, false);
   let bytes: Uint8Array<ArrayBuffer> | null = new Uint8Array(new ArrayBuffer(n * ch * 3));

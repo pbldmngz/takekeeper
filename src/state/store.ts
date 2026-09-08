@@ -7,6 +7,7 @@ import { clipTo16k } from '../ai/audio';
 import { UNCERTAIN, alignTakes, cleanTranscript, diagnose, groupWords, prepare, similarity } from '../ai/align';
 import { LANGUAGES, MODELS, Transcriber, detectDevice } from '../ai/transcriber';
 import { clamp, fmtTime, stem, uid } from '../util';
+import { laneLabel, langUrl, resolveLang, setLang, t, type Lang } from '../i18n';
 import {
   JUNK,
   TRASH,
@@ -125,6 +126,7 @@ class Store {
     this.player.onEnded = () => this.onPlaybackEnded();
     this.player.setGainDb(this.state.settings.gainDb);
     this.applyTheme();
+    setLang(resolveLang(this.state.settings.lang));
     document.body.dataset.phase = this.state.phase;
     void migrateLegacyProjects().then(() => this.refreshSessions());
   }
@@ -152,7 +154,7 @@ class Store {
     this.state.settings.gainDb = db;
     saveSettings(this.state.settings);
     this.player.setGainDb(db);
-    this.toast(`monitor ${db >= 0 ? '+' : ''}${db} db`);
+    this.toast(t('monitor {db} db', { db: (db >= 0 ? '+' : '') + db }));
   }
 
   // ---------- derived ----------
@@ -249,6 +251,11 @@ class Store {
     return this.state.project ? laneName(this.state.project, lane) : '';
   }
 
+  /** Lane name as displayed: default names translated, custom names as typed. */
+  laneLabel(lane: number) {
+    return laneLabel(this.laneName(lane));
+  }
+
   /** Decoded audio for a clip's view range, or null while it loads. */
   bufferFor(clip: Clip): Loaded | null {
     const [vs, ve] = this.viewRange(clip);
@@ -288,13 +295,13 @@ class Store {
     s.phase = 'loading';
     s.error = null;
     s.progress = 0;
-    s.status = 'Reading file…';
+    s.status = t('reading file…');
     s.playing = false;
     this.emit();
     try {
       const src = await openAudio(file);
       s.source = src;
-      s.status = 'Listening for takes…';
+      s.status = t('listening for takes…');
       this.emit();
       const an = await analyze(src, s.settings.frameMs, (p) => {
         s.progress = p;
@@ -337,8 +344,8 @@ class Store {
       if (existing && existing.clips.some((c) => c.text !== undefined) && !existing.clips.some((c) => c.conf !== undefined) && this.mine().length) {
         this.realign(); // transcribed earlier, but the matching never landed
       }
-      if (existing) this.toast(`Resumed · ${existing.clips.length} clips`);
-      else this.toast(`${s.project.clips.length} takes found`);
+      if (existing) this.toast(t('resumed · {n} clips', { n: existing.clips.length }));
+      else this.toast(t('{n} takes found', { n: s.project.clips.length }));
     } catch (e) {
       s.phase = 'empty';
       s.progress = null;
@@ -400,13 +407,13 @@ class Store {
         if (perm === 'granted') {
           const f = await h.getFile();
           if (fileKey(f) === r.key) return this.openFile(f, h);
-          this.state.error = 'That file changed on disk since last time - pick it again to start fresh.';
+          this.state.error = t('That file changed on disk since last time - pick it again to start fresh.');
         }
       } catch (e) {
         this.fail(e);
       }
     } else {
-      this.state.error = `Pick "${r.name}" again to resume where you left off.`;
+      this.state.error = t('Pick "{name}" again to resume where you left off.', { name: r.name });
     }
     this.emit();
   }
@@ -425,13 +432,13 @@ class Store {
         this.redoStack = [];
         s.project = p;
         await saveProject(p);
-        this.afterHistory(`project loaded · ${p.clips.length} clips`);
+        this.afterHistory(t('project loaded · {n} clips', { n: p.clips.length }));
         this.restoreCursor();
         this.emit();
         return;
       }
       s.error = null;
-      this.toast(`project loaded · now drop ${p.name}`);
+      this.toast(t('project loaded · now drop {name}', { name: p.name }));
     } catch (e) {
       this.fail(e);
     }
@@ -447,7 +454,7 @@ class Store {
     try {
       if (await saveBlob(blob, `${stem(p.name)}.takekeeper.json`)) {
         this.state.unsaved = 0;
-        this.toast('project saved');
+        this.toast(t('project saved'));
       }
     } catch (e) {
       this.fail(e);
@@ -462,7 +469,7 @@ class Store {
     await deleteProject(key);
     await idbDel(`handle:${key}`);
     await this.refreshSessions();
-    this.toast(`forgot ${r.name}`);
+    this.toast(t('forgot {name}', { name: r.name }));
   }
 
   private fail(e: unknown) {
@@ -514,19 +521,19 @@ class Store {
   undo() {
     const p = this.state.project;
     const snap = this.undoStack.pop();
-    if (!p || !snap) return this.toast('Nothing to undo');
+    if (!p || !snap) return this.toast(t('nothing to undo'));
     this.redoStack.push(p.clips);
     p.clips = snap;
-    this.afterHistory('Undo');
+    this.afterHistory(t('Undo'));
   }
 
   redo() {
     const p = this.state.project;
     const snap = this.redoStack.pop();
-    if (!p || !snap) return this.toast('Nothing to redo');
+    if (!p || !snap) return this.toast(t('nothing to redo'));
     this.undoStack.push(p.clips);
     p.clips = snap;
-    this.afterHistory('Redo');
+    this.afterHistory(t('Redo'));
   }
 
   private afterHistory(label: string) {
@@ -559,7 +566,7 @@ class Store {
     // the line filter, if any, follows you across lanes so a line can be checked pass by pass
     const list = this.laneList(lane);
     if (this.state.lineMode && this.state.lineFilter !== null && !list.length) {
-      this.toast(`no takes of line ${this.ordinal(this.state.lineFilter)} in ${laneName(p, lane).toLowerCase()} · g shows the whole lane`);
+      this.toast(t('no takes of line {n} in {lane} · g shows the whole lane', { n: this.ordinal(this.state.lineFilter) ?? '', lane: laneLabel(laneName(p, lane)) }));
     }
     const remembered = this.laneMemory.get(lane);
     const target = list.find((c) => c.id === remembered) ?? list[0] ?? null;
@@ -596,11 +603,11 @@ class Store {
   move(dir: 1 | -1, opts: { play?: boolean; slow?: boolean } = {}) {
     const list = this.laneList();
     const c = this.clip();
-    if (!list.length) return this.toast('Lane is empty');
+    if (!list.length) return this.toast(t('lane is empty'));
     if (!c) return this.gotoClip(list[0].id, opts);
     const i = list.findIndex((x) => x.id === c.id);
     const next = list[i + dir];
-    if (!next) return this.toast(dir > 0 ? 'End of lane' : 'Start of lane');
+    if (!next) return this.toast(dir > 0 ? t('end of lane') : t('start of lane'));
     this.gotoClip(next.id, opts);
   }
 
@@ -701,7 +708,7 @@ class Store {
       const i = list.findIndex((x) => x.id === c.id);
       const next = list[i + 1];
       if (next) return this.gotoClip(next.id, { play: true });
-      this.toast('End of lane');
+      this.toast(t('end of lane'));
     }
     this.emit();
   }
@@ -709,7 +716,7 @@ class Store {
   toggleLoop() {
     const s = this.state;
     s.loop = !s.loop;
-    this.toast(s.loop ? 'loop on · this take repeats' : 'loop off');
+    this.toast(s.loop ? t('loop on · this take repeats') : t('loop off'));
     if (s.loop && !s.playing) {
       const c = this.clip();
       if (c) void this.playFrom(c.start, false);
@@ -719,7 +726,7 @@ class Store {
   toggleAutoplay() {
     this.state.settings.autoplay = !this.state.settings.autoplay;
     saveSettings(this.state.settings);
-    this.toast(this.state.settings.autoplay ? 'Autoplay on' : 'Autoplay off');
+    this.toast(this.state.settings.autoplay ? t('autoplay on') : t('autoplay off'));
   }
 
   // ---------- triage ----------
@@ -728,7 +735,7 @@ class Store {
     const c = this.clip();
     const p = this.state.project;
     if (!c || !p) return;
-    if (c.lane === target) return this.toast(`Already in ${laneName(p, target)}`);
+    if (c.lane === target) return this.toast(t('already in {lane}', { lane: laneLabel(laneName(p, target)) }));
     const list = this.laneList();
     const i = list.findIndex((x) => x.id === c.id);
     const wasPlaying = this.state.playing;
@@ -737,7 +744,7 @@ class Store {
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, lane: target } : x)));
     const rescued = (c.lane === JUNK || c.lane === TRASH) && target !== TRASH && target !== JUNK;
     const ord = rescued ? this.ordinal(this.lineOf(c)) : undefined;
-    this.toast(`→ ${laneName(p, target)}${ord ? ` · line ${ord} · ${this.lineText(this.lineOf(c)).slice(0, 40)}` : ''}`);
+    this.toast(t('→ {lane}', { lane: laneLabel(laneName(p, target)) }) + (ord ? t(' · line {n} · {text}', { n: ord, text: this.lineText(this.lineOf(c)).slice(0, 40) }) : ''));
     const after = this.laneList();
     const next = after[i] ?? null;
     if (next) this.gotoClip(next.id, { play: wasPlaying });
@@ -748,7 +755,7 @@ class Store {
         this.state.cursor = null;
         this.emit();
       }
-      this.toast(after.length ? 'End of lane' : `${laneName(p, this.state.lane)} is empty`);
+      this.toast(after.length ? t('end of lane') : t('{lane} is empty', { lane: laneLabel(laneName(p, this.state.lane)) }));
     }
   }
 
@@ -757,14 +764,14 @@ class Store {
     const p = this.state.project;
     if (!c || !p) return;
     if (c.lane === TRASH || c.lane === JUNK) return this.moveClip(0); // rescue
-    if (c.lane >= finalLane(p)) return this.toast('Already in Final');
+    if (c.lane >= finalLane(p)) return this.toast(t('already in {lane}', { lane: laneLabel(laneName(p, finalLane(p))) }));
     this.moveClip(c.lane + 1);
   }
 
   demote() {
     const c = this.clip();
     if (!c) return;
-    if (c.lane === TRASH) return this.toast('Already in Trash');
+    if (c.lane === TRASH) return this.toast(t('already in {lane}', { lane: laneLabel('Trash') }));
     if (c.lane === JUNK) return this.moveClip(TRASH);
     if (c.lane === 0) return this.moveClip(JUNK);
     this.moveClip(c.lane - 1);
@@ -777,7 +784,7 @@ class Store {
   sendToLane(n: number) {
     const p = this.state.project;
     if (!p) return;
-    if (n < 0 || n >= p.laneNames.length) return this.toast('No such lane');
+    if (n < 0 || n >= p.laneNames.length) return this.toast(t('no such lane'));
     this.moveClip(n);
   }
 
@@ -788,7 +795,7 @@ class Store {
     const c = this.clip();
     if (!c) return;
     const pos = Math.round(this.playhead());
-    if (pos <= c.start || pos >= c.end) return this.toast('Move the playhead inside the clip to split');
+    if (pos <= c.start || pos >= c.end) return this.toast(t('move the playhead inside the clip to split'));
     this.player.stop();
     this.state.playing = false;
     const b: Clip = { id: uid(), start: pos, end: c.end, lane: c.lane };
@@ -798,7 +805,7 @@ class Store {
     this.state.cursor = stay ? c.id : b.id;
     this.state.pos = stay ? c.start : pos;
     this.laneMemory.set(c.lane, this.state.cursor);
-    this.toast('Split');
+    this.toast(t('Split'));
     this.emit();
   }
 
@@ -808,13 +815,13 @@ class Store {
     const list = this.laneList(c.lane);
     const i = list.findIndex((x) => x.id === c.id);
     const n = list[i + 1];
-    if (!n) return this.toast('No next clip in this lane');
+    if (!n) return this.toast(t('no next clip in this lane'));
     this.player.stop();
     this.state.playing = false;
     const seam = c.end;
     this.commit((clips) => clips.filter((x) => x.id !== n.id).map((x) => (x.id === c.id ? { ...x, end: n.end } : x)));
     this.state.pos = seam;
-    this.toast('Merged with next');
+    this.toast(t('merged with next'));
     this.emit();
   }
 
@@ -824,7 +831,7 @@ class Store {
     const list = this.laneList(c.lane);
     const i = list.findIndex((x) => x.id === c.id);
     const pv = list[i - 1];
-    if (!pv) return this.toast('No previous clip in this lane');
+    if (!pv) return this.toast(t('no previous clip in this lane'));
     this.player.stop();
     this.state.playing = false;
     const seam = pv.end;
@@ -832,7 +839,7 @@ class Store {
       clips.filter((x) => x.id !== pv.id).map((x) => (x.id === c.id ? { ...x, start: pv.start, line: pv.line ?? x.line } : x)),
     );
     this.state.pos = seam;
-    this.toast('Merged with previous');
+    this.toast(t('merged with previous'));
     this.emit();
   }
 
@@ -840,23 +847,23 @@ class Store {
     const c = this.clip();
     if (!c) return;
     const pos = Math.round(this.playhead());
-    if (pos >= c.end) return this.toast('Start must be before the end');
+    if (pos >= c.end) return this.toast(t('start must be before the end'));
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, start: pos } : x)));
-    this.toast(`Start → ${fmtTime(pos / this.state.source!.sampleRate)}`);
+    this.toast(t('start → {t}', { t: fmtTime(pos / this.state.source!.sampleRate) }));
   }
 
   setOut() {
     const c = this.clip();
     if (!c) return;
     const pos = Math.round(this.playhead());
-    if (pos <= c.start) return this.toast('End must be after the start');
+    if (pos <= c.start) return this.toast(t('end must be after the start'));
     if (this.state.playing) {
       this.player.stop();
       this.state.playing = false;
     }
     this.state.pos = pos;
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, end: pos } : x)));
-    this.toast(`End → ${fmtTime(pos / this.state.source!.sampleRate)}`);
+    this.toast(t('end → {t}', { t: fmtTime(pos / this.state.source!.sampleRate) }));
   }
 
   // ---------- script ----------
@@ -867,7 +874,7 @@ class Store {
     const p = this.state.project;
     if (!c || !p) return;
     const mine = this.mine();
-    if (!mine.length) return this.toast('no script yet · press t to paste one');
+    if (!mine.length) return this.toast(t('no script yet · press t to paste one'));
     const map = this.linesMap();
     let furthest = 0;
     for (const x of p.clips) if (x.start < c.start) furthest = Math.max(furthest, map.get(x.id) ?? 0);
@@ -880,18 +887,18 @@ class Store {
     const c = this.clip();
     if (!c) return;
     const mine = this.mine();
-    if (!mine.length) return this.toast('no script yet · press t to paste one');
+    if (!mine.length) return this.toast(t('no script yet · press t to paste one'));
     const cur = this.lineOf(c);
     const i = cur ? mine.findIndex((l) => l.n === cur) : -1;
     const j = i < 0 ? 0 : clamp(i + dir, 0, mine.length - 1);
-    if (j === i) return this.toast(dir > 0 ? 'last line' : 'first line');
+    if (j === i) return this.toast(dir > 0 ? t('last line') : t('first line'));
     this.setLine(mine[j].n);
   }
 
   gotoOrdinal(ordinal: number) {
     if (ordinal <= 0) return this.setLine(0);
     const n = this.globalOf(ordinal);
-    if (!n) return this.toast(`you only have ${this.mine().length} lines`);
+    if (!n) return this.toast(t('you only have {n} lines', { n: this.mine().length }));
     this.setLine(n);
   }
 
@@ -900,7 +907,7 @@ class Store {
     if (!p) return;
     p.character = name;
     this.persist();
-    this.toast(name ? `playing ${name}` : 'all spoken lines');
+    this.toast(name ? t('playing {name}', { name }) : t('all spoken lines'));
   }
 
   toggleContext() {
@@ -912,11 +919,11 @@ class Store {
 
   toggleLineMode() {
     const s = this.state;
-    if (!this.mine().length) return this.toast('no script yet · press t to paste one');
+    if (!this.mine().length) return this.toast(t('no script yet · press t to paste one'));
     if (s.lineMode) {
       s.lineMode = false;
       s.lineFilter = null;
-      this.toast('all clips');
+      this.toast(t('all clips'));
       return this.emit();
     }
     const c = this.clip();
@@ -940,8 +947,8 @@ class Store {
     const ord = this.ordinal(n);
     const counts = this.lineCounts().get(n);
     const here = list.length;
-    if (!here) this.toast(`line ${ord}: no takes in ${this.laneName(s.lane).toLowerCase()}${counts ? ` · ${counts.reduce((a, b) => a + b, 0)} in total` : ''}`);
-    else this.toast(`line ${ord} · ${here} take${here === 1 ? '' : 's'} here`);
+    if (!here) this.toast(t('line {n}: no takes in {lane}', { n: ord ?? '', lane: this.laneLabel(s.lane) }) + (counts ? t(' · {n} in total', { n: counts.reduce((a, b) => a + b, 0) }) : ''));
+    else this.toast(t(here === 1 ? 'line {n} · {k} take here' : 'line {n} · {k} takes here', { n: ord ?? '', k: here }));
     if (opts.play && target) void this.playFrom(target.start, false);
     this.emit();
   }
@@ -951,7 +958,7 @@ class Store {
     const mine = this.mine();
     const i = mine.findIndex((l) => l.n === this.state.lineFilter);
     const j = clamp((i < 0 ? 0 : i) + dir, 0, mine.length - 1);
-    if (j === i) return this.toast(dir > 0 ? 'last line' : 'first line');
+    if (j === i) return this.toast(dir > 0 ? t('last line') : t('first line'));
     this.selectLine(mine[j].n, { play: true });
   }
 
@@ -960,11 +967,11 @@ class Store {
     if (!c) return;
     if (n <= 0) {
       this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, line: undefined } : x)));
-      return this.toast('Line mark removed');
+      return this.toast(t('line mark removed'));
     }
     this.commit((clips) => clips.map((x) => (x.id === c.id ? { ...x, line: n } : x)));
-    const t = this.lineText(n);
-    this.toast(`line ${this.ordinal(n) ?? n}${t ? ' · ' + t.slice(0, 56) : ''}`);
+    const txt = this.lineText(n);
+    this.toast(t('line {n}', { n: this.ordinal(n) ?? n }) + (txt ? ' · ' + txt.slice(0, 56) : ''));
   }
 
   setScript(text: string) {
@@ -995,7 +1002,17 @@ class Store {
     if (patch.contextSeconds !== undefined) this.bufs.clear();
     if (patch.gainDb !== undefined) this.player.setGainDb(patch.gainDb);
     if (patch.theme) this.applyTheme();
+    if (patch.lang) {
+      setLang(resolveLang(patch.lang));
+      document.documentElement.lang = resolveLang(patch.lang);
+    }
     this.emit();
+  }
+
+  /** Header switch: on the landing page go to the page in that language; in the editor just re-render. */
+  switchLanguage(l: Lang) {
+    this.updateSettings({ lang: l });
+    if (this.state.phase !== 'ready') location.href = langUrl(l);
   }
 
   applyTheme() {
@@ -1022,7 +1039,7 @@ class Store {
     const first = this.laneList()[0];
     this.state.cursor = first?.id ?? null;
     this.state.pos = first?.start ?? 0;
-    this.toast(`${segs.length} takes`);
+    this.toast(t('{n} takes', { n: segs.length }));
     this.emit();
   }
 
@@ -1041,13 +1058,13 @@ class Store {
     const src = s.source;
     if (!p || !src) return;
     const mine = this.mine();
-    if (!mine.length) return this.toast('paste the script first · t');
+    if (!mine.length) return this.toast(t('paste the script first · t'));
     if (s.ai.status === 'loading' || s.ai.status === 'running') return;
     const language = await this.ensureModel();
     if (language === false) return;
     const order = [...p.clips].sort(byStart);
     const todo = order.filter((c) => scope === 'all' || !c.text);
-    s.ai = { status: 'running', progress: 0, done: 0, total: todo.length, message: 'transcribing', eta: null, uncertain: 0 };
+    s.ai = { status: 'running', progress: 0, done: 0, total: todo.length, message: t('transcribing'), eta: null, uncertain: 0 };
     this.emit();
     const texts = new Map<string, string>();
     const t0 = performance.now();
@@ -1081,7 +1098,7 @@ class Store {
     if (!cancelled && s.settings.autoSplit) {
       const pieces = this.splitMultiReads();
       if (pieces.length) {
-        s.ai = { ...s.ai, status: 'running', message: `re-cut ${pieces.length} pieces · transcribing them`, done: 0, total: pieces.length, eta: null };
+        s.ai = { ...s.ai, status: 'running', message: t('re-cut {n} pieces · transcribing them', { n: pieces.length }), done: 0, total: pieces.length, eta: null };
         this.emit();
         const more = new Map<string, string>();
         try {
@@ -1107,13 +1124,13 @@ class Store {
       }
       if (s.ai.status === 'running') {
         const r = await this.wordRecut(language);
-        if (r.split || r.merged) this.toast(`by word: ${r.split} split · ${r.merged} merged`);
+        if (r.split || r.merged) this.toast(t('by word: {a} split · {b} merged', { a: r.split, b: r.merged }));
       }
     }
     if (cancelled) {
-      s.ai = { ...s.ai, status: 'cancelled', message: `stopped · ${texts.size} takes transcribed, lines not re-matched` };
+      s.ai = { ...s.ai, status: 'cancelled', message: t('stopped · {n} takes transcribed, lines not re-matched', { n: texts.size }) };
     } else {
-      s.ai = { ...s.ai, status: 'done', message: `${texts.size} takes transcribed · ${s.ai.uncertain} uncertain · u jumps to them` };
+      s.ai = { ...s.ai, status: 'done', message: t('{n} takes transcribed · {u} uncertain · u jumps to them', { n: texts.size, u: s.ai.uncertain }) };
     }
     this.emit();
   }
@@ -1124,7 +1141,7 @@ class Store {
     const model = MODELS[s.settings.asrModel];
     const language = LANGUAGES[s.settings.asrLanguage];
     const { device, label } = await detectDevice();
-    s.ai = { status: 'loading', progress: 0, done: 0, total: 0, message: `loading ${model.label.split(' ')[0]} model on ${label}`, eta: null, uncertain: s.ai.uncertain };
+    s.ai = { status: 'loading', progress: 0, done: 0, total: 0, message: t('loading {model} model on {device}', { model: model.label.split(' ')[0], device: label }), eta: null, uncertain: s.ai.uncertain };
     this.emit();
     try {
       await this.asr.load(model.id, device, (frac, message) => {
@@ -1182,7 +1199,7 @@ class Store {
 
     // splits: multi-read takes (including false start + read) still in one piece
     const cands = order.filter((c) => !inMerge.has(c.id) && c.lane !== TRASH && c.kind === 'multi' && c.text && (c.reads ?? 0) >= 2);
-    s.ai = { ...s.ai, status: 'running', message: 'refining cuts by word', done: 0, total: cands.length, eta: null };
+    s.ai = { ...s.ai, status: 'running', message: t('refining cuts by word'), done: 0, total: cands.length, eta: null };
     this.emit();
     const texts = new Map<string, string>();
     const replaced = new Map<string, Clip[]>();
@@ -1250,12 +1267,12 @@ class Store {
     const s = this.state;
     if (!s.project || !s.source) return;
     if (s.ai.status === 'loading' || s.ai.status === 'running') return;
-    if (!s.project.clips.some((c) => c.text !== undefined)) return this.toast('nothing transcribed yet · w');
+    if (!s.project.clips.some((c) => c.text !== undefined)) return this.toast(t('nothing transcribed yet · w'));
     this.realign();
     const language = await this.ensureModel();
     if (language === false) return;
     const r = await this.wordRecut(language);
-    s.ai = { ...s.ai, status: 'done', message: `re-cut by words · ${r.split} split · ${r.merged} merged · ${s.ai.uncertain} uncertain` };
+    s.ai = { ...s.ai, status: 'done', message: t('re-cut by words · {a} split · {b} merged · {u} uncertain', { a: r.split, b: r.merged, u: s.ai.uncertain }) };
     this.emit();
   }
 
@@ -1308,7 +1325,7 @@ class Store {
       this.state.cursor = first?.id ?? null;
       this.state.pos = first?.start ?? this.state.pos;
     }
-    if (junked) this.toast(`${junked} empty takes moved to junk`);
+    if (junked) this.toast(t('{n} empty takes moved to junk', { n: junked }));
   }
 
   /** Match stored transcripts to lines again, e.g. after changing the character or the script. */
@@ -1317,10 +1334,10 @@ class Store {
     if (!p) return;
     const texts = new Map<string, string>();
     for (const c of p.clips) if (c.text !== undefined) texts.set(c.id, cleanTranscript(c.text)); // older transcripts get today's cleaning
-    if (!texts.size) return this.toast('nothing transcribed yet · w');
-    if (!this.mine().length) return this.toast('paste the script first · t');
+    if (!texts.size) return this.toast(t('nothing transcribed yet · w'));
+    if (!this.mine().length) return this.toast(t('paste the script first · t'));
     this.applyTranscripts(texts, true);
-    this.toast(`lines re-matched · ${this.state.ai.uncertain} uncertain`);
+    this.toast(t('lines re-matched · {u} uncertain', { u: this.state.ai.uncertain }));
   }
 
   /** Re-cut takes that contain several reads, with a finer silence threshold. Returns the new pieces. */
@@ -1354,7 +1371,7 @@ class Store {
     this.player.stop();
     this.state.playing = false;
     this.commit((clips) => clips.flatMap((c) => replaced.get(c.id) ?? [c]));
-    this.toast(`${replaced.size} takes with several reads re-cut into ${pieces.length}`);
+    this.toast(t('{n} takes with several reads re-cut into {m}', { n: replaced.size, m: pieces.length }));
     return pieces;
   }
 
@@ -1373,7 +1390,7 @@ class Store {
     const from = c ? list.findIndex((x) => x.id === c.id) : -1;
     const isDoubtful = (x: Clip) => x.conf !== undefined && x.conf < UNCERTAIN && x.kind !== 'junk';
     const next = list.slice(from + 1).find(isDoubtful) ?? list.slice(0, from + 1).find(isDoubtful);
-    if (!next) return this.toast('no uncertain takes in this lane');
+    if (!next) return this.toast(t('no uncertain takes in this lane'));
     this.gotoClip(next.id, { play: true });
   }
 

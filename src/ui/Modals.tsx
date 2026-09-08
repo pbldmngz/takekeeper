@@ -4,6 +4,7 @@ import { silenceBytes, wavHeader } from '../audio/wav';
 import { TRASH, finalLane, laneClips } from '../state/project';
 import { useStore } from '../state/store';
 import { MODELS, detectDevice } from '../ai/transcriber';
+import { T, laneLabel, t, type Key } from '../i18n';
 import { fmtDur, pad, stem } from '../util';
 
 export function Modals() {
@@ -31,18 +32,20 @@ function SettingsModal() {
   const current = s.state.project?.clips.length ?? 0;
   const an = s.state.analysis;
   const num = (e: Event) => Number((e.target as HTMLInputElement).value);
+  const checked = (e: Event) => (e.target as HTMLInputElement).checked;
 
   return (
     <div class="modal">
-      <h2>settings</h2>
-      <p class="lead">saved in this browser. detection changes apply when you press re-detect.</p>
+      <h2>{t('settings')}</h2>
+      <p class="lead">{t('saved in this browser. detection changes apply when you press re-detect.')}</p>
 
-      <h3>detection</h3>
+      <h3>{t('detection')}</h3>
       <div class="row">
         <label>
-          silence threshold
+          {t('silence threshold')}
           <small>
-            quieter than this is silence.{an ? ` this file: floor ≈ ${an.floor.toFixed(0)} db, peak ≈ ${an.peak.toFixed(0)} db.` : ''}
+            {t('quieter than this is silence.')}
+            {an ? t(' this file: floor ≈ {floor} db, peak ≈ {peak} db.', { floor: an.floor.toFixed(0), peak: an.peak.toFixed(0) }) : ''}
           </small>
         </label>
         <div class="val">
@@ -52,8 +55,8 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          minimum silence
-          <small>shorter pauses stay inside a take.</small>
+          {t('minimum silence')}
+          <small>{t('shorter pauses stay inside a take.')}</small>
         </label>
         <div class="val">
           <input type="range" min={0.1} max={4} step={0.1} value={st.minSilence} onInput={(e) => s.updateSettings({ minSilence: num(e) })} />
@@ -62,8 +65,8 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          margin
-          <small>room tone kept on each side of a take.</small>
+          {t('margin')}
+          <small>{t('room tone kept on each side of a take.')}</small>
         </label>
         <div class="val">
           <input type="range" min={0} max={1} step={0.05} value={st.margin} onInput={(e) => s.updateSettings({ margin: num(e) })} />
@@ -72,8 +75,8 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          fade at cuts
-          <small>tiny fade so edits never click. 0 = hard cuts.</small>
+          {t('fade at cuts')}
+          <small>{t('tiny fade so edits never click. 0 = hard cuts.')}</small>
         </label>
         <div class="val">
           <input type="range" min={0} max={30} step={1} value={st.fadeMs} onInput={(e) => s.updateSettings({ fadeMs: num(e) })} />
@@ -83,25 +86,23 @@ function SettingsModal() {
       {ready && (
         <div class="row">
           <label>
-            re-detect with these settings
-            <small>
-              {preview} takes with these settings · {current} now. unchanged clips keep their lane and line.
-            </small>
+            {t('re-detect with these settings')}
+            <small>{t('{preview} takes with these settings · {current} now. unchanged clips keep their lane and line.', { preview: preview ?? 0, current })}</small>
           </label>
           <div class="val">
             <button class="k amber" onClick={() => s.redetect()} disabled={preview === current}>
-              re-detect
+              {t('re-detect')}
             </button>
           </div>
         </div>
       )}
 
-      <h3>listening</h3>
+      <h3>{t('listening')}</h3>
       <div class="row">
         <label>
-          monitor gain
+          {t('monitor gain')}
           <small>
-            for quiet takes. never touches exports. <kbd>=</kbd> and <kbd>-</kbd> while listening.
+            <T k="for quiet takes. never touches exports. [[=]] and [[-]] while listening." />
           </small>
         </label>
         <div class="val">
@@ -114,8 +115,8 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          slow-motion speed
-          <small>tape-style: pitch drops with speed.</small>
+          {t('slow-motion speed')}
+          <small>{t('tape-style: pitch drops with speed.')}</small>
         </label>
         <div class="val">
           <input type="range" min={0.25} max={0.9} step={0.05} value={st.slowRate} onInput={(e) => s.updateSettings({ slowRate: num(e) })} />
@@ -124,48 +125,50 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          slow motion on <kbd>↑</kbd>
-          <small>replay the previous clip at the slow speed. <kbd>shift space</kbd> always does.</small>
+          <T k="slow motion on [[↑]]" />
+          <small>
+            <T k="replay the previous clip at the slow speed. [[shift space]] always does." />
+          </small>
         </label>
         <div class="val">
-          <input type="checkbox" checked={st.slowOnPrev} onChange={(e) => s.updateSettings({ slowOnPrev: (e.target as HTMLInputElement).checked })} />
+          <input type="checkbox" checked={st.slowOnPrev} onChange={(e) => s.updateSettings({ slowOnPrev: checked(e) })} />
         </div>
       </div>
       <div class="row">
         <label>
-          autoplay
-          <small>continue to the next clip when one finishes.</small>
+          {t('autoplay')}
+          <small>{t('continue to the next clip when one finishes.')}</small>
         </label>
         <div class="val">
-          <input type="checkbox" checked={st.autoplay} onChange={(e) => s.updateSettings({ autoplay: (e.target as HTMLInputElement).checked })} />
-        </div>
-      </div>
-
-      <h3>transcription</h3>
-      <div class="row">
-        <label>
-          empty takes go to junk
-          <small>breaths, slates and false starts with no words move to the junk lane for a quick review.</small>
-        </label>
-        <div class="val">
-          <input type="checkbox" checked={st.autoJunk} onChange={(e) => s.updateSettings({ autoJunk: (e.target as HTMLInputElement).checked })} />
-        </div>
-      </div>
-      <div class="row">
-        <label>
-          re-cut takes with several reads
-          <small>a take that repeats its line is cut at the pauses inside it and the pieces transcribed.</small>
-        </label>
-        <div class="val">
-          <input type="checkbox" checked={st.autoSplit} onChange={(e) => s.updateSettings({ autoSplit: (e.target as HTMLInputElement).checked })} />
+          <input type="checkbox" checked={st.autoplay} onChange={(e) => s.updateSettings({ autoplay: checked(e) })} />
         </div>
       </div>
 
-      <h3>editing</h3>
+      <h3>{t('transcription')}</h3>
       <div class="row">
         <label>
-          frame step
-          <small>one frame. alt steps a tenth of it.</small>
+          {t('empty takes go to junk')}
+          <small>{t('breaths, slates and false starts with no words move to the junk lane for a quick review.')}</small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.autoJunk} onChange={(e) => s.updateSettings({ autoJunk: checked(e) })} />
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          {t('re-cut takes with several reads')}
+          <small>{t('a take that repeats its line is cut at the pauses inside it and the pieces transcribed.')}</small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.autoSplit} onChange={(e) => s.updateSettings({ autoSplit: checked(e) })} />
+        </div>
+      </div>
+
+      <h3>{t('editing')}</h3>
+      <div class="row">
+        <label>
+          {t('frame step')}
+          <small>{t('one frame. alt steps a tenth of it.')}</small>
         </label>
         <div class="val">
           <input type="range" min={1} max={100} step={1} value={st.stepMs} onInput={(e) => s.updateSettings({ stepMs: num(e) })} />
@@ -174,35 +177,30 @@ function SettingsModal() {
       </div>
       <div class="row">
         <label>
-          arrows move fast
+          {t('arrows move fast')}
           <small>
-            <kbd>←</kbd> <kbd>→</kbd> jump ten frames; <kbd>shift</kbd> steps one frame, precise. off swaps them.
+            <T k="[[←]] [[→]] jump ten frames; [[shift]] steps one frame, precise. off swaps them." />
           </small>
         </label>
         <div class="val">
-          <input type="checkbox" checked={st.fastArrows} onChange={(e) => s.updateSettings({ fastArrows: (e.target as HTMLInputElement).checked })} />
+          <input type="checkbox" checked={st.fastArrows} onChange={(e) => s.updateSettings({ fastArrows: checked(e) })} />
         </div>
       </div>
       <div class="row">
         <label>
-          split stays on the first half
+          {t('split stays on the first half')}
           <small>
-            after <kbd>s</kbd>, review the part before the cut. off moves on to the part after it. <kbd>shift s</kbd> does the opposite of
-            this setting for one split.
+            <T k="after [[s]], review the part before the cut. off moves on to the part after it. [[shift s]] does the opposite of this setting for one split." />
           </small>
         </label>
         <div class="val">
-          <input
-            type="checkbox"
-            checked={st.splitStaysOnFirst}
-            onChange={(e) => s.updateSettings({ splitStaysOnFirst: (e.target as HTMLInputElement).checked })}
-          />
+          <input type="checkbox" checked={st.splitStaysOnFirst} onChange={(e) => s.updateSettings({ splitStaysOnFirst: checked(e) })} />
         </div>
       </div>
       <div class="row">
         <label>
-          context around a clip
-          <small>audio shown before and after, so you can extend a cut.</small>
+          {t('context around a clip')}
+          <small>{t('audio shown before and after, so you can extend a cut.')}</small>
         </label>
         <div class="val">
           <input type="range" min={0.5} max={5} step={0.25} value={st.contextSeconds} onInput={(e) => s.updateSettings({ contextSeconds: num(e) })} />
@@ -210,11 +208,11 @@ function SettingsModal() {
         </div>
       </div>
 
-      <h3>lanes & look</h3>
+      <h3>{t('lanes & look')}</h3>
       <div class="row">
         <label>
-          lane names
-          <small>comma-separated. first is the inbox, last is final. keys 1–9 send clips to them.</small>
+          {t('lane names')}
+          <small>{t('comma-separated. first is the inbox, last is final. keys 1–9 send clips to them.')}</small>
         </label>
         <div class="val">
           <input
@@ -231,12 +229,27 @@ function SettingsModal() {
         </div>
       </div>
       <div class="row">
-        <label>theme</label>
+        <label>{t('theme')}</label>
         <div class="val">
           <div class="seg">
-            {(['auto', 'dark', 'light'] as const).map((t) => (
-              <button class={st.theme === t ? 'on' : ''} onClick={() => s.updateSettings({ theme: t })}>
-                {t}
+            {(['auto', 'dark', 'light'] as const).map((th) => (
+              <button class={st.theme === th ? 'on' : ''} onClick={() => s.updateSettings({ theme: th })}>
+                {t(th)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <label>
+          {t('language')}
+          <small>{t('the whole interface. auto follows the page you opened.')}</small>
+        </label>
+        <div class="val">
+          <div class="seg">
+            {(['auto', 'en', 'es'] as const).map((l) => (
+              <button class={st.lang === l ? 'on' : ''} onClick={() => s.updateSettings({ lang: l })}>
+                {l === 'auto' ? t('auto') : l}
               </button>
             ))}
           </div>
@@ -245,7 +258,7 @@ function SettingsModal() {
 
       <div class="foot">
         <button class="k" onClick={() => s.openModal(null)}>
-          close <kbd>esc</kbd>
+          {t('close')} <kbd>esc</kbd>
         </button>
       </div>
     </div>
@@ -320,23 +333,23 @@ function ExportModal() {
     setProgress(0);
     try {
       if (mode === 'merged') {
-        setBusy('building merged file…');
+        setBusy(t('building merged file…'));
         const blob = await mergedBlob(src, clips.map((c) => [c.start, c.end]), fade, Math.round(gap * src.sampleRate), setProgress);
-        setBusy('saving…');
-        if (await saveBlob(blob, `${prefix}_${slug}.wav`)) setDone('merged file saved.');
+        setBusy(t('saving…'));
+        if (await saveBlob(blob, `${prefix}_${slug}.wav`)) setDone(t('merged file saved.'));
       } else if (mode === 'zip') {
-        setBusy('preparing clips…');
+        setBusy(t('preparing clips…'));
         const e = await entries(setProgress);
-        setBusy('packing zip…');
+        setBusy(t('packing zip…'));
         const blob = await buildZip(e, setProgress);
-        setBusy('saving…');
-        if (await saveBlob(blob, `${prefix}_${slug}.zip`)) setDone(`${e.length} clips zipped.`);
+        setBusy(t('saving…'));
+        if (await saveBlob(blob, `${prefix}_${slug}.zip`)) setDone(t('{n} clips zipped.', { n: e.length }));
       } else {
-        setBusy('preparing clips…');
+        setBusy(t('preparing clips…'));
         const e = await entries(setProgress);
-        setBusy('writing files…');
+        setBusy(t('writing files…'));
         const n = await saveToFolder(e, setProgress);
-        if (n !== null) setDone(`${n} files written.`);
+        if (n !== null) setDone(t('{n} files written.', { n }));
       }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -347,67 +360,71 @@ function ExportModal() {
 
   return (
     <div class="modal">
-      <h2>export</h2>
+      <h2>{t('export')}</h2>
       <p class="lead">
         {byLine
-          ? 'clips are numbered in script order, then by recording time within a line, so sorting by name plays your lines in order.'
-          : 'clips are numbered in recording order, so sorting by name keeps them chronological.'}
+          ? t('clips are numbered in script order, then by recording time within a line, so sorting by name plays your lines in order.')
+          : t('clips are numbered in recording order, so sorting by name keeps them chronological.')}
       </p>
 
       <div class="row">
         <label>
-          order
-          <small>{hasLines ? 'by line: script order, recording order within a line. takes without a line go last.' : 'recording order; by line becomes available once takes have lines (marks or transcription).'}</small>
+          {t('order')}
+          <small>
+            {hasLines
+              ? t('by line: script order, recording order within a line. takes without a line go last.')
+              : t('recording order; by line becomes available once takes have lines (marks or transcription).')}
+          </small>
         </label>
         <div class="val">
           <div class="seg">
             <button class={st.exportByLine && hasLines ? 'on' : ''} disabled={!hasLines} onClick={() => s.updateSettings({ exportByLine: true })}>
-              by line
+              {t('by line')}
             </button>
             <button class={!st.exportByLine || !hasLines ? 'on' : ''} onClick={() => s.updateSettings({ exportByLine: false })}>
-              by time
+              {t('by time')}
             </button>
           </div>
         </div>
       </div>
       <div class="row">
-        <label>lane</label>
+        <label>{t('lane')}</label>
         <div class="val">
           <select value={lane} onChange={(e) => setLane(Number((e.target as HTMLSelectElement).value))}>
             {p.laneNames.map((n, i) => (
-              <option value={i}>{n.toLowerCase()}</option>
+              <option value={i}>{laneLabel(n)}</option>
             ))}
-            <option value={-2}>junk</option>
-            <option value={TRASH}>trash</option>
+            <option value={-2}>{laneLabel('Junk')}</option>
+            <option value={TRASH}>{laneLabel('Trash')}</option>
           </select>
         </div>
       </div>
       <div class="row">
         <label>
-          format
+          {t('format')}
           <small>
-            {clips.length} clips · {fmtDur(total)}
-            {st.spacers && gaps > 0 && mode !== 'merged' ? ` · ${gaps} gap${gaps === 1 ? '' : 's'} · ${fmtDur(gapSeconds)} of silence` : ''}
+            {t('{n} clips · {dur}', { n: clips.length, dur: fmtDur(total) })}
+            {st.spacers && gaps > 0 && mode !== 'merged' ? t(gaps === 1 ? ' · {n} gap · {dur} of silence' : ' · {n} gaps · {dur} of silence', { n: gaps, dur: fmtDur(gapSeconds) }) : ''}
           </small>
         </label>
         <div class="val">
           <div class="seg">
             {canSaveFolder && (
               <button class={mode === 'folder' ? 'on' : ''} onClick={() => setMode('folder')}>
-                folder
+                {t('folder')}
               </button>
             )}
             <button class={mode === 'zip' ? 'on' : ''} onClick={() => setMode('zip')}>
-              zip
+              {t('zip')}
             </button>
             <button class={mode === 'merged' ? 'on' : ''} onClick={() => setMode('merged')}>
-              one file
+              {t('one file')}
             </button>
           </div>
         </div>
       </div>
       <div class="row">
-        <label>file name prefix</label>
+        <label>{t('file name prefix')}</label>
         <div class="val">
           <input type="text" value={prefix} onInput={(e) => setPrefix((e.target as HTMLInputElement).value)} />
         </div>
@@ -415,8 +432,8 @@ function ExportModal() {
       {mode === 'merged' && (
         <div class="row">
           <label>
-            gap between clips
-            <small>silence inserted between takes in the merged file.</small>
+            {t('gap between clips')}
+            <small>{t('silence inserted between takes in the merged file.')}</small>
           </label>
           <div class="val">
             <input type="range" min={0} max={3} step={0.1} value={gap} onInput={(e) => setGap(Number((e.target as HTMLInputElement).value))} />
@@ -425,18 +442,17 @@ function ExportModal() {
         </div>
       )}
 
-      <h3>project file</h3>
+      <h3>{t('project file')}</h3>
       <div class="row">
         <label>
-          lanes, cuts, line marks and script
+          {t('lanes, cuts, line marks and script')}
           <small>
-            saved in this browser automatically, but a file is safer: keep it next to the wav and drop it on the landing page to pick up
-            where you left off. <kbd>ctrl s</kbd> anywhere.
+            <T k="saved in this browser automatically, but a file is safer: keep it next to the wav and drop it on the landing page to pick up where you left off. [[ctrl s]] anywhere." />
           </small>
         </label>
         <div class="val">
           <button class="k" onClick={() => void s.saveProjectFile()}>
-            save project
+            {t('save project')}
           </button>
         </div>
       </div>
@@ -445,8 +461,8 @@ function ExportModal() {
         <>
           <div class="row">
             <label>
-              silent gaps between takes
-              <small>tiny silent wav files, numbered to sort in place, so the folder drops into the daw with the spacing already there.</small>
+              {t('silent gaps between takes')}
+              <small>{t('tiny silent wav files, numbered to sort in place, so the folder drops into the daw with the spacing already there.')}</small>
             </label>
             <div class="val">
               <input type="checkbox" checked={st.spacers} onChange={(e) => s.updateSettings({ spacers: (e.target as HTMLInputElement).checked })} />
@@ -455,8 +471,8 @@ function ExportModal() {
           {st.spacers && (
             <div class="row">
               <label>
-                after every take / between lines
-                <small>seconds. the longer gap is used when the next take is a different line.</small>
+                {t('after every take / between lines')}
+                <small>{t('seconds. the longer gap is used when the next take is a different line.')}</small>
               </label>
               <div class="val">
                 <input
@@ -481,13 +497,13 @@ function ExportModal() {
         </>
       )}
 
-      <h3>into fl studio</h3>
+      <h3>{t('into fl studio')}</h3>
       <div class="tips">
-        <b>1.</b> in the browser, sort the folder <b>by name</b> and select every file.
+        <b>1.</b> <T k="in the browser, sort the folder **by name** and select every file." />
         <br />
-        <b>2.</b> hold <b>shift</b> while dropping them onto the playlist; they land on one track, in order.
+        <b>2.</b> <T k="hold **shift** while dropping them onto the playlist; they land on one track, in order." />
         <br />
-        <b>3.</b> turn on <b>ripple edit</b> so deleting a clip closes the gap.
+        <b>3.</b> <T k="turn on **ripple edit** so deleting a clip closes the gap." />
       </div>
 
       {busy && (
@@ -506,12 +522,12 @@ function ExportModal() {
         </div>
       )}
       <div class="foot">
-        <span class="left">{done ?? (mode === 'folder' ? 'pick a folder; files are written directly into it.' : '')}</span>
+        <span class="left">{done ?? (mode === 'folder' ? t('pick a folder; files are written directly into it.') : '')}</span>
         <button class="k" onClick={() => s.openModal(null)}>
-          close
+          {t('close')}
         </button>
         <button class="k amber" onClick={() => void run()} disabled={!!busy || !clips.length}>
-          {mode === 'folder' ? 'save to folder' : mode === 'zip' ? 'download zip' : 'save file'}
+          {mode === 'folder' ? t('save to folder') : mode === 'zip' ? t('download zip') : t('save file')}
         </button>
       </div>
     </div>
@@ -529,7 +545,7 @@ function HelpModal() {
       ))}
     </span>
   );
-  const rows: Array<[string, string[]]> = [
+  const rows: Array<[Key, string[]]> = [
     ['play / pause', ['space']],
     ['play clip from start, slow', ['shift', 'space']],
     ['previous clip', ['↑']],
@@ -566,19 +582,19 @@ function HelpModal() {
   ];
   return (
     <div class="modal">
-      <h2>keys</h2>
-      <p class="lead">everything acts on the clip under the amber playhead.</p>
+      <h2>{t('keys')}</h2>
+      <p class="lead">{t('everything acts on the clip under the amber playhead.')}</p>
       <div class="keys">
         {rows.map(([label, k]) => (
           <div>
-            <span>{label}</span>
+            <span>{t(label)}</span>
             <K k={k} />
           </div>
         ))}
       </div>
       <div class="foot">
         <button class="k" onClick={() => s.openModal(null)}>
-          close <kbd>esc</kbd>
+          {t('close')} <kbd>esc</kbd>
         </button>
       </div>
     </div>
@@ -592,7 +608,7 @@ function TranscribeModal() {
   const st = s.state.settings;
   const ai = s.state.ai;
   const p = s.state.project!;
-  const [device, setDevice] = useState<string>('checking…');
+  const [device, setDevice] = useState<string>(t('checking…'));
   useEffect(() => {
     void detectDevice().then((d) => setDevice(d.label));
   }, []);
@@ -603,24 +619,24 @@ function TranscribeModal() {
 
   return (
     <div class="modal">
-      <h2>transcribe</h2>
+      <h2>{t('transcribe')}</h2>
       <p class="lead">
-        whisper runs on your gpu, inside this page. the model downloads once ({model.size}) and is cached; your audio never leaves the
-        machine. afterwards every take is matched to one of your lines, empty takes go to the junk lane, takes with several reads are
-        re-cut at the pauses, and the leftovers are re-cut by word: reads with no pause between them, false starts, and lines a pause
-        split in two.
+        {t(
+          'whisper runs on your gpu, inside this page. the model downloads once ({size}) and is cached; your audio never leaves the machine. afterwards every take is matched to one of your lines, empty takes go to the junk lane, takes with several reads are re-cut at the pauses, and the leftovers are re-cut by word: reads with no pause between them, false starts, and lines a pause split in two.',
+          { size: model.size },
+        )}
       </p>
 
       <div class="row">
         <label>
-          language
-          <small>what the takes are spoken in.</small>
+          {t('language')}
+          <small>{t('what the takes are spoken in.')}</small>
         </label>
         <div class="val">
           <div class="seg">
             {(['spanish', 'english', 'auto'] as const).map((l) => (
               <button class={st.asrLanguage === l ? 'on' : ''} disabled={busy} onClick={() => s.updateSettings({ asrLanguage: l })}>
-                {l}
+                {t(l)}
               </button>
             ))}
           </div>
@@ -628,8 +644,8 @@ function TranscribeModal() {
       </div>
       <div class="row">
         <label>
-          model
-          <small>small is the safe choice for spanish; base is roughly three times faster.</small>
+          {t('model')}
+          <small>{t('small is the safe choice for spanish; base is roughly three times faster.')}</small>
         </label>
         <div class="val">
           <div class="seg">
@@ -643,13 +659,11 @@ function TranscribeModal() {
       </div>
       <div class="row">
         <label>
-          runs on
+          {t('runs on')}
           <small>{device}</small>
         </label>
         <div class="val">
-          <span class="mono">
-            {withText}/{p.clips.length} transcribed
-          </span>
+          <span class="mono">{t('{n}/{total} transcribed', { n: withText, total: p.clips.length })}</span>
         </div>
       </div>
 
@@ -657,7 +671,7 @@ function TranscribeModal() {
         <div style={{ marginTop: 16 }}>
           <div class={ai.status === 'error' ? 'error' : 'muted'} style={{ marginBottom: 6 }}>
             {ai.message}
-            {ai.status === 'running' ? ` · ${ai.done}/${ai.total}${ai.eta ? ` · about ${Math.ceil(ai.eta / 60)} min left` : ''}` : ''}
+            {ai.status === 'running' ? ` · ${ai.done}/${ai.total}${ai.eta ? t(' · about {n} min left', { n: Math.ceil(ai.eta / 60) }) : ''}` : ''}
           </div>
           {busy && (
             <div class="bar">
@@ -668,33 +682,38 @@ function TranscribeModal() {
       )}
 
       <div class="foot">
-        <span class="left">{hasScript ? 'you can keep sorting while it runs; the banner shows progress.' : 'paste the script first (t) so takes have lines to match.'}</span>
+        <span class="left">{hasScript ? t('you can keep sorting while it runs; the banner shows progress.') : t('paste the script first (t) so takes have lines to match.')}</span>
         <button class="k" onClick={() => s.openModal(null)}>
-          close
+          {t('close')}
         </button>
         {busy ? (
           <button class="k" onClick={() => s.cancelTranscribe()}>
-            cancel
+            {t('cancel')}
           </button>
         ) : (
           <>
             {withText > 0 && (
-              <button class="k" disabled={!hasScript} title="use the stored transcripts; no gpu time" onClick={() => s.realign()}>
-                re-match lines
+              <button class="k" disabled={!hasScript} title={t('use the stored transcripts; no gpu time')} onClick={() => s.realign()}>
+                {t('re-match lines')}
               </button>
             )}
             {withText > 0 && (
-              <button class="k" disabled={!hasScript} title="word timestamps on flagged takes: split reads with no pause, separate false starts, merge split lines" onClick={() => void s.wordRecutNow()}>
-                re-cut by words
+              <button
+                class="k"
+                disabled={!hasScript}
+                title={t('word timestamps on flagged takes: split reads with no pause, separate false starts, merge split lines')}
+                onClick={() => void s.wordRecutNow()}
+              >
+                {t('re-cut by words')}
               </button>
             )}
             {withText > 0 && withText < p.clips.length && (
               <button class="k" disabled={!hasScript} onClick={() => void s.transcribe('missing')}>
-                only new takes
+                {t('only new takes')}
               </button>
             )}
             <button class="k amber" disabled={!hasScript} onClick={() => void s.transcribe('all')}>
-              {withText ? 'transcribe all again' : 'transcribe all takes'}
+              {withText ? t('transcribe all again') : t('transcribe all takes')}
             </button>
           </>
         )}
@@ -721,8 +740,8 @@ function GotoModal() {
   };
   return (
     <div class="modal narrow">
-      <h2>your line number</h2>
-      <p class="lead">this clip and the ones after it. 0 removes the mark.</p>
+      <h2>{t('your line number')}</h2>
+      <p class="lead">{t('this clip and the ones after it. 0 removes the mark.')}</p>
       <input
         ref={ref}
         type="number"
@@ -735,10 +754,10 @@ function GotoModal() {
       />
       <div class="foot">
         <button class="k" onClick={() => s.openModal(null)}>
-          cancel
+          {t('cancel')}
         </button>
         <button class="k amber" onClick={apply}>
-          set line <kbd>enter</kbd>
+          {t('set line')} <kbd>enter</kbd>
         </button>
       </div>
     </div>

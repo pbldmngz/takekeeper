@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 // Main-thread client for the Whisper worker: one model load, sequential takes,
 // download progress aggregated across files, hard cancel by terminating the worker.
 
@@ -35,7 +37,7 @@ export async function detectDevice(): Promise<{ device: AsrDevice; label: string
       /* fall through */
     }
   }
-  return { device: 'wasm', label: 'cpu · no webgpu, expect it to be slow' };
+  return { device: 'wasm', label: t('cpu · no webgpu, expect it to be slow') };
 }
 
 export interface Word {
@@ -77,7 +79,7 @@ export class Transcriber {
         total += f.total;
       }
       const frac = total ? loaded / total : 0;
-      const label = p.status === 'ready' ? 'warming up' : `downloading model · ${Math.round(loaded / 1e6)} / ${Math.round(total / 1e6)} MB`;
+      const label = p.status === 'ready' ? t('warming up') : t('downloading model · {a} / {b} MB', { a: Math.round(loaded / 1e6), b: Math.round(total / 1e6) });
       this.onProgress?.(frac, label);
       return;
     }
@@ -92,7 +94,7 @@ export class Transcriber {
       return;
     }
     if (msg.type === 'error') {
-      const err = new Error(msg.message ?? 'transcription failed');
+      const err = new Error(msg.message ?? t('transcription failed'));
       if (msg.id !== undefined) {
         this.pending.get(msg.id)?.reject(err);
         this.pending.delete(msg.id);

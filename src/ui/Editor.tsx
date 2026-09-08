@@ -1,8 +1,10 @@
 import { JUNK, TRASH, laneCounts } from '../state/project';
 import { useStore } from '../state/store';
+import { T, laneLabel, t } from '../i18n';
 import { fmtDur, fmtTime } from '../util';
 import { Toolbar } from './Toolbar';
 import { ClipView } from './ClipView';
+import { LangSwitch } from './Empty';
 import { Logo } from './Logo';
 import { Overview } from './Overview';
 import { ScriptPanel } from './ScriptPanel';
@@ -22,17 +24,19 @@ export function Editor() {
   const filterCounts = lineFilter ? s.lineCounts().get(lineFilter) : undefined;
   const lineBanner =
     lineMode && lineFilter
-      ? `line ${filterOrd} of ${s.mine().length} · ${s.lineText(lineFilter).slice(0, 60)} · ` +
+      ? `${t('line {n} of {total}', { n: filterOrd ?? '', total: s.mine().length })} · ${s.lineText(lineFilter).slice(0, 60)} · ` +
         (filterCounts
           ? p.laneNames
-              .map((n, i) => (filterCounts[i] ? `${n.toLowerCase()} ${filterCounts[i]}` : ''))
+              .map((n, i) => (filterCounts[i] ? `${laneLabel(n)} ${filterCounts[i]}` : ''))
               .filter(Boolean)
-              .join(' · ') || 'no takes'
-          : 'no takes') +
-        ' · shift ↑↓ changes line'
+              .join(' · ') || t('no takes')
+          : t('no takes')) +
+        ' · ' +
+        t('shift ↑↓ changes line')
       : null;
-  const laneNow = s.laneName(lane).toLowerCase();
+  const laneNow = s.laneLabel(lane);
   const gain = settings.gainDb;
+  const busy = ai.status === 'loading' || ai.status === 'running';
 
   return (
     <div class="editor">
@@ -40,36 +44,37 @@ export function Editor() {
         <Logo />
         <div class="file" title={src.name}>
           <b>{src.name}</b> · {fmtTime(src.frames / src.sampleRate, 0)} · {src.sampleRate / 1000} khz ·{' '}
-          {src.channels === 1 ? 'mono' : src.channels === 2 ? 'stereo' : `${src.channels} ch`} · {src.float ? '32f' : src.bits}-bit
+          {src.channels === 1 ? t('mono') : src.channels === 2 ? t('stereo') : t('{n} ch', { n: src.channels })} · {src.float ? '32f' : src.bits}-bit
         </div>
         <nav class="lanes">
           {p.laneNames.map((name, i) => (
-            <button class={`lane${lane === i ? ' active' : ''}`} onClick={() => s.setLane(i)} title={`lane ${i}`}>
-              {name.toLowerCase()} <span class="n">{counts[i]}</span>
+            <button class={`lane${lane === i ? ' active' : ''}`} onClick={() => s.setLane(i)} title={t('lane {n}', { n: i })}>
+              {laneLabel(name)} <span class="n">{counts[i]}</span>
             </button>
           ))}
-          <button class={`lane junk${lane === JUNK ? ' active' : ''}`} onClick={() => s.setLane(JUNK)} title="auto-detected non-takes: enter rescues, backspace trashes">
-            junk <span class="n">{counts[p.laneNames.length]}</span>
+          <button class={`lane junk${lane === JUNK ? ' active' : ''}`} onClick={() => s.setLane(JUNK)} title={t('auto-detected non-takes: enter rescues, backspace trashes')}>
+            {laneLabel('Junk')} <span class="n">{counts[p.laneNames.length]}</span>
           </button>
           <button class={`lane trash${lane === TRASH ? ' active' : ''}`} onClick={() => s.setLane(TRASH)}>
-            trash <span class="n">{counts[p.laneNames.length + 1]}</span>
+            {laneLabel('Trash')} <span class="n">{counts[p.laneNames.length + 1]}</span>
           </button>
         </nav>
         <div class="actions">
           <button
             class={`k${unsaved ? ' amber' : ''}`}
             onClick={() => void s.saveProjectFile()}
-            title={unsaved ? `${unsaved} unsaved edit${unsaved === 1 ? '' : 's'} · save the project file` : 'save the project file'}
+            title={unsaved ? t(unsaved === 1 ? '{n} unsaved edit · save the project file' : '{n} unsaved edits · save the project file', { n: unsaved }) : t('save the project file')}
           >
-            save <kbd>ctrl s</kbd>
+            {t('save')} <kbd>ctrl s</kbd>
           </button>
           <button class="k amber" onClick={() => s.openModal('export')}>
-            export <kbd>e</kbd>
+            {t('export')} <kbd>e</kbd>
           </button>
-          <button class="k" onClick={() => s.openModal('settings')} title="settings">
+          <LangSwitch />
+          <button class="k" onClick={() => s.openModal('settings')} title={t('settings')}>
             <kbd>,</kbd>
           </button>
-          <button class="k" onClick={() => s.openModal('help')} title="keys">
+          <button class="k" onClick={() => s.openModal('help')} title={t('keys')}>
             <kbd>?</kbd>
           </button>
         </div>
@@ -77,12 +82,20 @@ export function Editor() {
       <div class={`banner${toast ? '' : ' quiet'}`}>
         {toast
           ? toast.text
-          : ai.status === 'loading' || ai.status === 'running'
-            ? `${ai.message} · ${ai.status === 'running' ? `${ai.done}/${ai.total}` : `${Math.round(ai.progress * 100)}%`}${ai.eta ? ` · ${Math.ceil(ai.eta / 60)} min left` : ''} · w to cancel`
+          : busy
+            ? `${ai.message} · ${ai.status === 'running' ? `${ai.done}/${ai.total}` : `${Math.round(ai.progress * 100)}%`}${ai.eta ? ` · ${t('{n} min left', { n: Math.ceil(ai.eta / 60) })}` : ''} · ${t('w to cancel')}`
             : lineBanner ??
               (lane === JUNK
-                ? `junk · ${list.length} clip${list.length === 1 ? '' : 's'} found empty by transcription · enter rescues to unsorted · backspace trashes`
-                : `${laneNow} · ${list.length} clip${list.length === 1 ? '' : 's'} · enter promotes · backspace trashes · tab switches lane`)}
+                ? t(
+                    list.length === 1
+                      ? 'junk · {n} clip found empty by transcription · enter rescues to unsorted · backspace trashes'
+                      : 'junk · {n} clips found empty by transcription · enter rescues to unsorted · backspace trashes',
+                    { n: list.length },
+                  )
+                : t(list.length === 1 ? '{lane} · {n} clip · enter promotes · backspace trashes · tab switches lane' : '{lane} · {n} clips · enter promotes · backspace trashes · tab switches lane', {
+                    lane: laneNow,
+                    n: list.length,
+                  }))}
       </div>
 
       <Overview />
@@ -102,31 +115,39 @@ export function Editor() {
             <span class="mono">{fmtDur((clip.end - clip.start) / src.sampleRate)}</span>
             {line ? (
               <span class="line-text">
-                <b>line {ord ?? line}</b> {lineText}
+                <b>{t('line {n}', { n: ord ?? line })}</b> {lineText}
                 {clip.text !== undefined && (
-                  <span class="tx" title="transcript">
+                  <span class="tx" title={t('transcript')}>
                     {' '}
-                    {clip.kind === 'multi' ? <b class="doubt">×{clip.reads} reads </b> : clip.kind === 'partial' ? <b class="doubt">false start </b> : clip.kind === 'junk' ? <b class="doubt">junk </b> : clip.conf !== undefined && clip.conf < 0.36 ? <b class="doubt">? </b> : null}
+                    {clip.kind === 'multi' ? (
+                      <b class="doubt">{t('×{n} reads', { n: clip.reads ?? 2 })} </b>
+                    ) : clip.kind === 'partial' ? (
+                      <b class="doubt">{t('false start')} </b>
+                    ) : clip.kind === 'junk' ? (
+                      <b class="doubt">{t('junk')} </b>
+                    ) : clip.conf !== undefined && clip.conf < 0.36 ? (
+                      <b class="doubt">? </b>
+                    ) : null}
                     “{clip.text || '…'}”
                   </span>
                 )}
               </span>
             ) : (
               <span class="line-text dim">
-                no line · <kbd>l</kbd> marks the next line here
+                <T k="no line · [[l]] marks the next line here" />
               </span>
             )}
           </>
         ) : (
           <span class="line-text">
-            {laneNow} is empty · <kbd>tab</kbd> switches lanes
+            <T k="{lane} is empty · [[tab]] switches lanes" v={{ lane: laneNow }} />
           </span>
         )}
-        <span class={`badge${playing ? ' play' : ''}`}>{playing ? (slow ? `slow ${settings.slowRate}×` : 'playing') : 'stopped'}</span>
-        {loop && <span class="badge on">loop</span>}
-        {lineMode && <span class="badge on">by line</span>}
-        {lane === JUNK && <span class="badge on">enter rescues · ⌫ trashes</span>}
-        <span class={`badge${settings.autoplay ? ' on' : ''}`}>autoplay</span>
+        <span class={`badge${playing ? ' play' : ''}`}>{playing ? (slow ? t('slow {r}×', { r: settings.slowRate }) : t('playing')) : t('stopped')}</span>
+        {loop && <span class="badge on">{t('loop')}</span>}
+        {lineMode && <span class="badge on">{t('by line')}</span>}
+        {lane === JUNK && <span class="badge on">{t('enter rescues · ⌫ trashes')}</span>}
+        <span class={`badge${settings.autoplay ? ' on' : ''}`}>{t('autoplay')}</span>
         <span class={`badge${gain !== 0 ? ' on' : ''}`}>
           {gain >= 0 ? '+' : ''}
           {gain} db

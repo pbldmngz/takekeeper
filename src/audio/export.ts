@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { decodeSamples, encodeSamples, silenceBytes, wavHeader, type Source } from './wav';
 
 export const canSaveFolder = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
@@ -118,7 +119,7 @@ export async function buildZip(entries: Entry[], onProgress?: (p: number) => voi
   let cdSize = 0;
   for (const p of central) cdSize += (p as ArrayBuffer | Uint8Array).byteLength;
   if (offset + cdSize > 0xffffffff || entries.length > 0xffff) {
-    throw new Error('ZIP would exceed 4 GB / 65535 files. Use Save to folder instead.');
+    throw new Error(t('ZIP would exceed 4 GB / 65535 files. Use Save to folder instead.'));
   }
   const eocd = new DataView(new ArrayBuffer(22));
   eocd.setUint32(0, 0x06054b50, true);

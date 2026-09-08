@@ -1,6 +1,19 @@
 import { useState } from 'preact/hooks';
 import { useStore } from '../state/store';
+import { T, lang, t } from '../i18n';
 import { Logo } from './Logo';
+
+/** [es] on the English page, [en] on the Spanish one; amber when the browser prefers the other language. */
+export function LangSwitch() {
+  const s = useStore();
+  const other = lang() === 'es' ? 'en' : 'es';
+  const nudge = s.state.settings.lang === 'auto' && navigator.language.toLowerCase().startsWith(other);
+  return (
+    <button class={`k${nudge ? ' amber' : ''}`} onClick={() => s.switchLanguage(other)} title={other === 'es' ? t('switch to spanish') : t('switch to english')}>
+      {other}
+    </button>
+  );
+}
 
 export function Empty() {
   const s = useStore();
@@ -20,11 +33,12 @@ export function Empty() {
       <header class="top">
         <Logo />
         <div class="actions">
+          <LangSwitch />
           <button class="k" onClick={() => s.openModal('settings')}>
-            settings <kbd>,</kbd>
+            {t('settings')} <kbd>,</kbd>
           </button>
           <button class="k" onClick={() => s.openModal('help')}>
-            keys <kbd>?</kbd>
+            {t('keys')} <kbd>?</kbd>
           </button>
         </div>
       </header>
@@ -40,12 +54,12 @@ export function Empty() {
         </div>
       ) : (
         <section class="hero">
-          <p class="eyebrow">for voice actors</p>
-          <h1>split a recording session into takes. keep the good ones.</h1>
+          <p class="eyebrow">{t('for voice actors')}</p>
+          <h1>{t('split a recording session into takes. keep the good ones.')}</h1>
           <p class="lead">
-            drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and
-            matches it to your script, then you keep the good ones line by line with a single key and export the keepers as numbered
-            files for fl studio, reaper or any daw.
+            {t(
+              'drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and matches it to your script, then you keep the good ones line by line with a single key and export the keepers as numbered files for fl studio, reaper or any daw.',
+            )}
           </p>
 
           <div
@@ -58,12 +72,12 @@ export function Empty() {
             onDragLeave={() => setOver(false)}
             onDrop={onDrop}
           >
-            <span class="big">drop your session wav here</span>
+            <span class="big">{t('drop your session wav here')}</span>
             <span class="muted">
-              or press <kbd>ctrl o</kbd> to browse · any length · nothing is uploaded
+              <T k="or press [[ctrl o]] to browse · any length · nothing is uploaded" />
             </span>
             <span class="dim">
-              a saved <b>.takekeeper.json</b> project can be dropped here too, then its wav
+              <T k="a saved **.takekeeper.json** project can be dropped here too, then its wav" />
             </span>
           </div>
 
@@ -73,13 +87,13 @@ export function Empty() {
                 const asking = confirm === r.key;
                 return (
                   <p class="resume" key={r.key}>
-                    <span class="dim">&gt;</span> {asking ? 'forget the sorting for' : 'continue'} <b>{r.name}</b>
-                    {asking && <span class="dim">? the recording stays where it is</span>}
+                    <span class="dim">&gt;</span> {asking ? t('forget the sorting for') : t('continue')} <b>{r.name}</b>
+                    {asking && <span class="dim">{t('? the recording stays where it is')}</span>}
                     <span class="actions">
                       {asking ? (
                         <>
                           <button class="k" onClick={() => setConfirm(null)}>
-                            keep
+                            {t('keep')}
                           </button>
                           <button
                             class="k amber"
@@ -88,16 +102,16 @@ export function Empty() {
                               setConfirm(null);
                             }}
                           >
-                            yes, discard
+                            {t('yes, discard')}
                           </button>
                         </>
                       ) : (
                         <>
                           <button class="k amber" onClick={() => void s.resume(r.key)}>
-                            resume
+                            {t('resume')}
                           </button>
-                          <button class="k muted" onClick={() => setConfirm(r.key)} title="forget the saved sorting for this file">
-                            discard
+                          <button class="k muted" onClick={() => setConfirm(r.key)} title={t('forget the saved sorting for this file')}>
+                            {t('discard')}
                           </button>
                         </>
                       )}
@@ -111,7 +125,7 @@ export function Empty() {
             <div class="error">
               <span>{error}</span>
               <button class="k" onClick={() => s.clearError()}>
-                dismiss
+                {t('dismiss')}
               </button>
             </div>
           )}

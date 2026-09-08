@@ -13,6 +13,8 @@ account, no server.
 
 Lanes, cuts and script line marks are saved in the browser and restored when you open the same file again.
 
+The interface and the landing page exist in English (`/`) and Spanish (`/es/`). The app follows the page you opened; a language chosen in Settings wins and redirects to its page.
+
 ## Keys
 
 Everything acts on the clip under the amber playhead.
@@ -56,7 +58,9 @@ npm install
 npm run dev
 ```
 
-`npm run build` type-checks and writes a static site to `dist/`.
+`npm run build` type-checks and writes a static site to `dist/`, including `dist/es/index.html`.
+
+UI copy lives in `src/i18n.tsx` (`t('english string')`, keys are the English text, Spanish in one dictionary; TypeScript flags a key that is missing). The Spanish landing is `landing/es.html` + `landing/es.json`; `landing/plugin.ts` builds `/es/` from `index.html` and regenerates the JSON-LD on both pages from the visible FAQ.
 
 ## Deploy to Vercel
 

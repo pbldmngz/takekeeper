@@ -171,7 +171,7 @@ Terminology used consistently in the product: *take* (what you recorded), *clip*
 
 Takekeeper began as a Python command-line script that cut a session at the silences into numbered files for a voice actor to arrange in FL Studio. The lane workflow copies what that actor was doing by hand: several audio tracks, the good takes dragged up a layer per pass. The web version replaced the CLI, then gained the script, transcription, junk detection and re-cutting over a few days of use on real sessions.
 
-Not built, and honest about it: recording inside the browser (your interface and DAW do it better; pickups may come later), automatic trimming from word timestamps (see §8), and localisation of the interface into Spanish (planned; the script parsing and transcription already handle both languages).
+Not built, and honest about it: recording inside the browser (your interface and DAW do it better; pickups may come later), and automatic trimming from word timestamps (see §8).
 
 ---
 
@@ -187,5 +187,6 @@ One editor screenshot with a real session loaded and transcribed, mid-sort, is e
 - Runs in the browser; built with Vite, TypeScript and Preact; hosted on Vercel as a static site.
 - Speech recognition: OpenAI Whisper (small / base), run locally via transformers.js and WebGPU, using the `_timestamped` ONNX exports for word timestamps.
 - Languages tuned: Spanish, English. Auto-detect for others.
+- Interface and landing page in English (takekeeper.com) and Spanish (takekeeper.com/es/); the app follows the page you open, or a language chosen in settings.
 - Export: WAV, byte-exact, script order, silent gap files; folder, zip or merged single file.
 - FL Studio tip that the export is designed around: sort by name, select all, hold Shift while dropping onto the playlist, then Ripple edit.

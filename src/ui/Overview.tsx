@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useStore } from '../state/store';
+import { t } from '../i18n';
 import { cssVar } from '../util';
 
 const PX_PER_SEC = 26;
@@ -91,7 +92,7 @@ export function Overview() {
       ctx.fillStyle = dim;
       ctx.font = `13px ${cssVar('--font')}`;
       ctx.textAlign = 'center';
-      ctx.fillText('This lane is empty', W / 2, H / 2 + 4);
+      ctx.fillText(t('this lane is empty'), W / 2, H / 2 + 4);
     }
   });
 

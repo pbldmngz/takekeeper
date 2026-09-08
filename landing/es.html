@@ -1,0 +1,216 @@
+<!-- Spanish landing. The @hero block replaces the static hero inside #app, the @landing block replaces <main id="landing">. Keep the structure identical to index.html. -->
+<!-- @hero -->
+      <div class="landing-top">
+        <header class="top">
+          <a class="brand" href="/es/"><svg viewBox="0 0 48 64" aria-hidden="true"><rect x="0" y="28" width="10" height="20" fill="var(--cyan)" /><rect x="14.5" y="28.5" width="19" height="19" fill="none" stroke="var(--cyan)" stroke-width="1" stroke-dasharray="2 2" opacity=".5" /><rect x="14" y="16" width="20" height="20" fill="var(--coral)" /><rect x="38" y="28" width="10" height="20" fill="var(--cyan)" /></svg>takekeeper</a>
+        </header>
+        <section class="hero">
+          <p class="eyebrow">para actores de doblaje y locutores</p>
+          <h1>divide una sesión de grabación en tomas. quédate con las buenas.</h1>
+          <p class="lead">
+            suelta el wav largo de tu sesión. takekeeper lo corta en cada silencio, transcribe cada toma en tu propia gpu y la empareja con tu guion;
+            después eliges las buenas línea a línea con una sola tecla y exportas las elegidas como archivos numerados para fl studio, reaper o
+            cualquier daw.
+          </p>
+        </section>
+      </div>
+<!-- @landing -->
+    <main id="landing">
+      <section id="look" class="wide">
+        <figure class="shot">
+          <img
+            src="/screenshot.png"
+            alt="editor de takekeeper a media selección: pestañas de carriles con recuentos (sin ordenar 797, pasada 1 70, basura 125, papelera 45), una tira de tomas con la actual en ámbar, su forma de onda con inicio, fin y cursor, el panel del guion con el selector de personaje, tomas por línea y la línea actual resaltada, la transcripción en la línea de información y una barra con todas las teclas"
+            width="1917"
+            height="943"
+            loading="lazy"
+          />
+          <figcaption>
+            una sesión de 57 minutos a media selección: transcrita, emparejada con el guion, 125 no-tomas ya en basura, 70 elegidas en la pasada 1.
+            la toma ámbar es la que está bajo el cursor; el panel del guion cuenta las tomas por línea y por pasada.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="who">
+        <h2 class="prompt">hecho para una sola cosa</h2>
+        <p>
+          <b>takekeeper es una herramienta para seleccionar tomas, pensada para actores de doblaje y locutores.</b> grabas la sesión en un solo
+          archivo largo: toma tras toma, con silencio entre ellas. takekeeper convierte ese archivo en tomas sueltas, averigua a qué línea del
+          guion pertenece cada una y te da una forma de quedarte con las buenas usando solo el teclado, línea a línea, en tantas pasadas como
+          necesites, sin tocar nunca una línea de tiempo.
+        </p>
+        <p>
+          está hecho para <b>sesiones de locución</b>, <b>audiolibros</b>, <b>doblaje y adr</b>, personajes, castings y retakes, en
+          <b>español e inglés</b>: cualquier trabajo en el que necesites <b>cortar una grabación de voz por los silencios</b>, escuchar juntas
+          todas las tomas de una línea y acabar con una carpeta limpia de tomas elegidas para tu daw.
+        </p>
+      </section>
+
+      <section id="how">
+        <h2 class="prompt">cómo funciona</h2>
+        <div class="steps">
+          <div class="card">
+            <h3>suelta la sesión</h3>
+            <p>un wav de cualquier duración. los silencios entre tomas se detectan en segundos y cada toma pasa a ser un clip en el carril <b>sin ordenar</b>. pega el guion y elige tu personaje.</p>
+          </div>
+          <div class="card">
+            <h3>deja que lea las tomas</h3>
+            <p>pulsa <kbd>w</kbd> y whisper transcribe cada toma en tu propia gpu, dentro de la página. cada toma se empareja con una de tus líneas; respiraciones y claquetas van a un carril de <b>basura</b>; una toma con dos lecturas se corta en dos.</p>
+          </div>
+          <div class="card">
+            <h3>selecciona, línea a línea</h3>
+            <p>recorre tus líneas con el número de tomas por pasada en cada una. las tomas suenan solas; <kbd class="amber">enter</kbd> sube una al carril siguiente, <kbd>backspace</kbd> la tira. segunda pasada sobre <b>pasada 1</b>, tercera sobre <b>pasada 2</b>, hasta que <b>final</b> tenga una por línea.</p>
+          </div>
+          <div class="card">
+            <h3>exporta las elegidas</h3>
+            <p>el carril final se convierte en wav numerados en el orden del guion, con el número de línea en el nombre y huecos de silencio entre ellos, escritos directamente en una carpeta, listos para soltarlos con shift en una pista de fl studio, o en reaper, audition, pro tools.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="what">
+        <h2 class="prompt">qué hace</h2>
+        <div class="cards">
+          <div class="card">
+            <h3>detección pensada para tomas</h3>
+            <p>800 tomas en una hora es lo normal. umbral, silencio mínimo y margen son ajustables; re-detectar nunca pierde tu selección.</p>
+          </div>
+          <div class="card amber">
+            <h3>transcripción en tu gpu</h3>
+            <p>whisper corre en el navegador con webgpu. el modelo se descarga una vez; tu audio nunca sale de tu equipo. unos doce minutos por cada hora de tomas.</p>
+          </div>
+          <div class="card">
+            <h3>cada toma sabe su línea</h3>
+            <p>las tomas se emparejan con el guion en orden de grabación, así que una línea a la que volviste sigue cayendo donde toca. las dudosas quedan marcadas; <kbd>u</kbd> las recorre.</p>
+          </div>
+          <div class="card">
+            <h3>carril de basura</h3>
+            <p>respiraciones, claquetas y falsos inicios sin palabras se apartan solos a un carril que revisas con las mismas dos teclas. nunca se lleva la última toma de una línea.</p>
+          </div>
+          <div class="card">
+            <h3>cortes afinados de oído y por palabra</h3>
+            <p>una toma que repite su línea se re-corta en las pausas y, donde no hay pausa, entre las palabras. los falsos inicios se separan; una línea que una pausa partió en dos se vuelve a unir.</p>
+          </div>
+          <div class="card">
+            <h3>carriles en vez de capas</h3>
+            <p>la selección en varias pasadas que ya haces arrastrando clips entre pistas, sin arrastrar. carriles configurables, recuentos en cada pestaña y en cada línea.</p>
+          </div>
+          <div class="card">
+            <h3>teclado primero, ratón también</h3>
+            <p>cada acción es una tecla, colocada para que una sesión entera se pueda seleccionar con una mano. cada tecla es también un botón.</p>
+          </div>
+          <div class="card">
+            <h3>arregla los cortes tú mismo</h3>
+            <p>repite a cámara lenta, avanza paso a paso, corta, une un corte fallido, pon un nuevo inicio o fin. deshaz lo que quieras.</p>
+          </div>
+          <div class="card">
+            <h3>sesiones que vuelven</h3>
+            <p>carriles, cortes, líneas y transcripciones se guardan mientras trabajas; cada grabación que tocaste aparece aquí para reanudarla o descartarla. <kbd>ctrl s</kbd> escribe un archivo de proyecto que puedes volver a soltar en cualquier sitio.</p>
+          </div>
+          <div class="card">
+            <h3>privado, bit a bit</h3>
+            <p>sin subida, sin cuenta. las tomas exportadas son recortes byte a byte de tu grabación, con su misma profundidad de bits y un fundido de 5 ms en cada corte.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="keys" class="wide">
+        <h2 class="prompt">teclas</h2>
+        <p>todo actúa sobre el clip bajo el cursor ámbar. cada tecla es también un botón en la barra de herramientas.</p>
+        <div class="keys-cols">
+          <table class="keytable">
+            <tr><td><kbd>space</kbd> / <kbd>shift space</kbd></td><td>reproducir–pausa / reproducir la toma desde el inicio a cámara lenta</td></tr>
+            <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>toma anterior / siguiente</td></tr>
+            <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>mover el cursor · shift: un paso, preciso · alt: una décima</td></tr>
+            <tr><td><kbd>home</kbd> / <kbd>end</kbd></td><td>inicio / fin de la toma</td></tr>
+            <tr><td><kbd class="amber">enter</kbd> / <kbd>shift enter</kbd></td><td>subir al carril siguiente / bajar</td></tr>
+            <tr><td><kbd>backspace</kbd></td><td>tirar; el carril se cierra</td></tr>
+            <tr><td><kbd>1</kbd>…<kbd>9</kbd> <kbd>0</kbd></td><td>enviar al carril n / volver a sin ordenar</td></tr>
+            <tr><td><kbd>tab</kbd> / <kbd>shift tab</kbd></td><td>carril siguiente / anterior, basura y papelera incluidos</td></tr>
+            <tr><td><kbd>=</kbd> / <kbd>-</kbd></td><td>ganancia de escucha arriba / abajo, nunca se exporta</td></tr>
+            <tr><td><kbd>s</kbd> / <kbd>shift s</kbd></td><td>cortar en el cursor, quedándose en la primera mitad / en la segunda</td></tr>
+            <tr><td><kbd>m</kbd> / <kbd>shift m</kbd></td><td>unir con la siguiente / la anterior</td></tr>
+            <tr><td><kbd>i</kbd> / <kbd>o</kbd></td><td>poner el inicio / fin de la toma en el cursor</td></tr>
+          </table>
+          <table class="keytable">
+            <tr><td><kbd>g</kbd></td><td>modo línea: las tomas de una línea cada vez</td></tr>
+            <tr><td><kbd>shift ↑</kbd> <kbd>shift ↓</kbd></td><td>en modo línea: línea anterior / siguiente</td></tr>
+            <tr><td><kbd>l</kbd> / <kbd>shift l</kbd></td><td>continuar el guion aquí / ir a un número de línea</td></tr>
+            <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>esta toma: una línea atrás / adelante</td></tr>
+            <tr><td><kbd>t</kbd></td><td>editar el guion</td></tr>
+            <tr><td><kbd>w</kbd></td><td>transcribir las tomas y emparejarlas con las líneas</td></tr>
+            <tr><td><kbd>u</kbd></td><td>siguiente línea dudosa</td></tr>
+            <tr><td><kbd>a</kbd> / <kbd>r</kbd></td><td>autoplay sí/no / repetir la toma actual en bucle</td></tr>
+            <tr><td><kbd>ctrl z</kbd> / <kbd>ctrl shift z</kbd></td><td>deshacer / rehacer</td></tr>
+            <tr><td><kbd>ctrl s</kbd> / <kbd>ctrl o</kbd></td><td>guardar el archivo de proyecto / abrir un archivo o proyecto</td></tr>
+            <tr><td><kbd>e</kbd> · <kbd>,</kbd> · <kbd>?</kbd></td><td>exportar · ajustes · lista de teclas</td></tr>
+            <tr><td><kbd>esc</kbd></td><td>parar / cerrar</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="daw">
+        <h2 class="prompt">a tu daw</h2>
+        <ul>
+          <li><b>fl studio:</b> ordena la carpeta exportada por nombre, selecciona todo y mantén <b>shift</b> al soltarlo en el playlist: una sola pista, en orden, con los archivos de silencio (un segundo tras cada toma, dos entre líneas, ambos ajustables) ya en su sitio. activa <b>ripple edit</b> para que al borrar un clip se cierre el hueco.</li>
+          <li><b>reaper:</b> selecciona los archivos en el media explorer e insértalos en una pista, en secuencia (insert → as one track, sequentially).</li>
+          <li><b>audition / pro tools / logic:</b> importa la carpeta; la numeración mantiene el orden. o exporta un único wav con un hueco fijo entre tomas.</li>
+        </ul>
+      </section>
+
+      <section id="faq">
+        <h2 class="prompt">preguntas frecuentes</h2>
+        <details>
+          <summary>¿se sube mi grabación a algún sitio?</summary>
+          <p>no. takekeeper lee el archivo directamente de tu disco dentro del navegador, y la transcripción corre en tu propia gpu dentro de la página. no hay servidor, ni cuenta, ni subida; lo único que se descarga es la app y, una vez, el modelo de voz.</p>
+        </details>
+        <details>
+          <summary>¿cuánto puede durar la grabación?</summary>
+          <p>los wav pueden durar lo que sea: una sesión de una hora a 24 bits con 800 tomas carga en unos segundos y casi no usa memoria, porque los clips son referencias al archivo original, no copias. los formatos comprimidos (mp3, flac, ogg, m4a) se decodifican en memoria, así que con esos no pases de unos 25 minutos o conviértelos a wav antes.</p>
+        </details>
+        <details>
+          <summary>¿cómo encuentra las tomas?</summary>
+          <p>mide el nivel de cada tramo de 20 ms y corta donde el audio se mantiene por debajo de un umbral durante más tiempo que el silencio mínimo. las respiraciones y pausas cortas dentro de una toma se dejan en paz, y se conserva un margen de sonido de sala a ambos lados. umbral, silencio mínimo y margen son ajustables y puedes re-detectar en cualquier momento. tras la transcripción, las tomas que contienen dos lecturas se vuelven a cortar en la pausa entre ellas, o entre las palabras cuando no la hay.</p>
+        </details>
+        <details>
+          <summary>¿cómo funciona la transcripción y cuánto tarda?</summary>
+          <p>whisper corre en tu navegador con webgpu, así que necesita chrome o edge y una gpu. el modelo se descarga una vez y queda en caché: <b>small</b> (unos 410 mb) es la opción segura para español, <b>base</b> (unos 140 mb) es el doble de rápido y algo más tosco. en una gpu de gama media, una hora de tomas se transcribe en unos doce minutos, y puedes seguir seleccionando mientras corre. después cada toma se empareja con una de tus líneas en orden de grabación, respiraciones y claquetas van al carril de basura, y las tomas con varias lecturas se re-cortan.</p>
+        </details>
+        <details>
+          <summary>¿y si empareja una toma con la línea equivocada?</summary>
+          <p>las dudosas llevan una marca y <kbd>u</kbd> las recorre; <kbd>[</kbd> y <kbd>]</kbd> mueven una toma una línea atrás o adelante mientras escuchas. si cambias de personaje o corriges una errata del guion, "re-emparejar líneas" en el diálogo de transcribir rehace el emparejado a partir de las transcripciones guardadas en un segundo, sin gpu.</p>
+        </details>
+        <details>
+          <summary>¿puedo usarlo sin transcripción?</summary>
+          <p>sí. pega el guion y pulsa <kbd>l</kbd> en la primera toma de cada una de tus líneas mientras escuchas; cada toma posterior hereda esa línea hasta la siguiente marca. <kbd>[</kbd> y <kbd>]</kbd> corrigen una toma a la que volviste, y el modo línea con recuentos funciona igual en los dos casos.</p>
+        </details>
+        <details>
+          <summary>¿qué es el carril de basura?</summary>
+          <p>tras la transcripción, las tomas sin palabras (respiraciones, claquetas, una tos, un falso inicio que no llegó a una palabra) pasan al carril de basura en vez de estorbar. revísalo como cualquier carril: <kbd>backspace</kbd> confirma, <kbd>enter</kbd> rescata a sin ordenar. nunca se lleva la última toma que le queda a una línea, así que ninguna línea se queda muda por accidente.</p>
+        </details>
+        <details>
+          <summary>¿y si un corte cae en el sitio equivocado?</summary>
+          <p>cada toma muestra el audio de alrededor, así que puedes mover el cursor paso a paso y poner un nuevo inicio o fin, cortar una toma en dos o unirla de nuevo con la vecina, lo que recupera el audio original entre ambas. todo tiene deshacer.</p>
+        </details>
+        <details>
+          <summary>¿mi selección sobrevive a cerrar la pestaña?</summary>
+          <p>sí. carriles, cortes, marcas de línea, transcripciones y el punto donde estabas se guardan en el navegador mientras trabajas, y cada grabación que tocaste aparece en esta página para reanudarla o descartarla. si vuelves a exportar o renombras la grabación, takekeeper busca una sesión guardada con la misma duración y la recupera. para lo que te importe, pulsa <kbd>ctrl s</kbd>: escribe un pequeño .takekeeper.json junto al wav que puedes soltar en esta página cuando quieras, en cualquier navegador.</p>
+        </details>
+        <details>
+          <summary>¿qué navegadores funcionan?</summary>
+          <p>chrome y edge en escritorio lo tienen todo, incluida la transcripción, guardar directamente en una carpeta y reabrir la sesión con un clic. firefox selecciona bien pero descarga un zip y no tiene webgpu, así que la transcripción cae a la cpu y es lenta. es una herramienta de teclado, así que móviles y tablets no son el objetivo.</p>
+        </details>
+        <details>
+          <summary>¿puedo grabar directamente en takekeeper?</summary>
+          <p>todavía no. graba con tu cadena de siempre (tu interfaz y tu daw lo hacen mejor) y suelta el wav aquí. grabar retakes en el navegador está en la lista.</p>
+        </details>
+      </section>
+
+      <footer class="site">
+        <span>◆ takekeeper</span>
+        <span>selección de tomas para actores de doblaje</span>
+        <span>gratis · privado · teclado primero</span>
+        <span>wav de cualquier duración · mp3 / flac / ogg para archivos cortos</span>
+      </footer>
+    </main>

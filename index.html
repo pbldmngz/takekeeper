@@ -10,11 +10,16 @@
       content="Drop an hour-long WAV of voice-over takes. Takekeeper cuts it at the silences, transcribes every take on your own GPU, matches each one to your script, and lets you keep the good ones line by line with the keyboard. Multi-pass lanes, junk detection, split, merge, trim, export straight into FL Studio or any DAW. Free, private, nothing uploaded."
     />
     <link rel="canonical" href="https://takekeeper.com/" />
+    <link rel="alternate" hreflang="en" href="https://takekeeper.com/" />
+    <link rel="alternate" hreflang="es" href="https://takekeeper.com/es/" />
+    <link rel="alternate" hreflang="x-default" href="https://takekeeper.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Takekeeper" />
     <meta property="og:title" content="Takekeeper: the takes worth keeping" />
     <meta property="og:description" content="Take triage for voice actors. Split a session at the silences, transcribe on your GPU, sort takes line by line into passes with the keyboard, export the keepers. Runs in your browser, nothing uploaded." />
     <meta property="og:url" content="https://takekeeper.com/" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
     <meta property="og:image" content="https://takekeeper.com/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -22,130 +27,31 @@
     <meta name="twitter:image" content="https://takekeeper.com/og.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "SoftwareApplication",
-      "name": "Takekeeper",
-      "url": "https://takekeeper.com/",
-      "applicationCategory": "MultimediaApplication",
-      "operatingSystem": "Web browser (Chrome, Edge)",
-      "description": "Take triage for voice actors: split a long voice-over recording at the silences, transcribe every take with Whisper on your own GPU, match takes to script lines, sort them line by line into passes with the keyboard, fix cuts, and export the keepers as numbered WAV files. Runs entirely in the browser; nothing is uploaded.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "audience": {
-        "@type": "Audience",
-        "audienceType": "Voice actors, audiobook narrators, dubbing and ADR performers"
-      }
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is my recording uploaded anywhere?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "No. takekeeper reads the file straight from your disk inside the browser, and transcription runs on your own gpu inside the page. there is no server, no account and no upload; the only downloads are the app and, once, the speech model."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How long can the recording be?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Wav files can be any length: an hour-long 24-bit session with 800 takes loads in a few seconds and uses almost no memory, because clips are references into the original file, not copies. compressed formats (mp3, flac, ogg, m4a) are decoded in memory, so keep those under about 25 minutes or convert to wav first."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does it find the takes?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "It measures the level of every 20 ms frame and cuts wherever the audio stays below a threshold for longer than the minimum silence. short breaths and pauses inside a take are left alone, and a margin of room tone is kept on both sides. threshold, minimum silence and margin are adjustable and you can re-detect at any time. after transcription, takes that contain two reads are cut again at the pause between them, or between the words when there is none."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does transcription work, and how long does it take?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Whisper runs in your browser through webgpu, so it needs chrome or edge and a gpu. the model downloads once and is cached: small (about 410 mb) is the safe choice for spanish, base (about 140 mb) is twice as fast and a little rougher. on a mid-range gpu an hour of takes transcribes in roughly twelve minutes, and you can keep sorting while it runs. each take is then matched to one of your lines in recording order, breaths and slates go to the junk lane, and takes with several reads are re-cut."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What if it matches a take to the wrong line?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Doubtful matches carry a mark and u walks through them; [ and ] move a take one line back or forward while you listen. if you change your character or fix a typo in the script, \"re-match lines\" in the transcribe dialog redoes the matching from the stored transcripts in a second, without the gpu."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can i use it without transcription?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. paste the script and press l on the first take of each of your lines while listening; every take after it inherits that line until the next mark. [ and ] fix a take you went back for, and line mode with counts works the same either way."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What is the junk lane?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "After transcription, takes with no words in them (breaths, slates, a cough, a false start that never got to a word) move to the junk lane instead of staying in your way. review it like any lane: backspace confirms, enter rescues to unsorted. it never takes a line's last remaining take, so no line goes silent by accident."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What if a cut lands in the wrong place?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Every take shows the audio around it, so you can step the playhead by a frame and set a new start or end, split a take in two, or merge it back with its neighbour, which restores the original audio between them. everything has undo."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Will my sorting survive closing the tab?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. lanes, cuts, line marks, transcripts and where you were are saved in the browser as you work, and every recording you touched is listed on this page to resume or discard. if you re-export or rename the recording, takekeeper looks for a saved session with the same length and picks it up. for anything you care about, press ctrl s: it writes a small .takekeeper.json next to the wav that you can drop on this page any time, in any browser."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Which browsers work?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Chrome and edge on desktop get everything, including transcription, saving straight into a folder, and reopening your session with one click. firefox sorts fine but downloads a zip and has no webgpu, so transcription falls back to the cpu and is slow. it is a keyboard tool, so phones and tablets are not the target."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can i record directly in takekeeper?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Not yet. record in your usual chain (your interface and daw do it better) and drop the wav here. recording pickups in the browser is on the list."
-          }
-        }
-      ]
-    }
-  ]
-}
-    </script>
   </head>
   <body data-phase="empty">
-    <div id="app"></div>
+    <div id="app">
+      <!-- hero -->
+      <div class="landing-top">
+        <header class="top">
+          <a class="brand" href="/"><svg viewBox="0 0 48 64" aria-hidden="true"><rect x="0" y="28" width="10" height="20" fill="var(--cyan)" /><rect x="14.5" y="28.5" width="19" height="19" fill="none" stroke="var(--cyan)" stroke-width="1" stroke-dasharray="2 2" opacity=".5" /><rect x="14" y="16" width="20" height="20" fill="var(--coral)" /><rect x="38" y="28" width="10" height="20" fill="var(--cyan)" /></svg>takekeeper</a>
+        </header>
+        <section class="hero">
+          <p class="eyebrow">for voice actors</p>
+          <h1>split a recording session into takes. keep the good ones.</h1>
+          <p class="lead">
+            drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and matches it to
+            your script, then you keep the good ones line by line with a single key and export the keepers as numbered files for fl studio,
+            reaper or any daw.
+          </p>
+        </section>
+      </div>
+      <!-- /hero -->
+    </div>
 
     <main id="landing">
       <section id="look" class="wide">

@@ -1,4 +1,5 @@
 import type { DetectParams } from '../audio/analyze';
+import { t, type LangSetting } from '../i18n';
 
 export const TRASH = -1;
 export const JUNK = -2; // auto-detected non-takes, waiting for a look
@@ -36,6 +37,7 @@ export interface Settings extends DetectParams {
   gapClip: number; // seconds after every take
   gapLine: number; // seconds when the next take is another line
   exportByLine: boolean; // number exported takes in script order rather than recording order
+  lang: LangSetting; // interface language; auto follows the page (/ or /es/)
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -62,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gapClip: 1,
   gapLine: 2,
   exportByLine: true,
+  lang: 'auto',
 };
 
 export interface Project {
@@ -193,12 +196,12 @@ export function parseProjectFile(text: string): Project {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new Error('That is not a takekeeper project file.');
+    throw new Error(t('That is not a takekeeper project file.'));
   }
   const wrapped = raw as { format?: string; project?: Project };
   const p = wrapped?.format === PROJECT_FILE ? wrapped.project : (raw as Project);
   if (!p || p.version !== 1 || !Array.isArray(p.clips) || !p.audio || !Array.isArray(p.laneNames)) {
-    throw new Error('That is not a takekeeper project file.');
+    throw new Error(t('That is not a takekeeper project file.'));
   }
   return p;
 }

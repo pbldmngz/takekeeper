@@ -177,7 +177,7 @@ Not built, and honest about it: recording inside the browser (your interface and
 
 ## 11. Suggested screenshot
 
-One editor screenshot with a real session loaded and transcribed, mid-sort, is enough (the one on the landing page, `public/screenshot.png`, is exactly that: 797 unsorted, 70 in pass 1, 125 in junk, take #40 on line 17 "Estoy negociando."): the lane tabs with counts along the top (including Junk and Trash), the overview strip with the current take in amber, the waveform with IN/OUT and the amber playhead, the script panel with the character picker, per-line counts and the highlighted current line, the info line showing `line 43 · Espera, déjame terminar.` with its transcript, and the toolbar. That single frame contains every concept in this document.
+One editor screenshot with a real session loaded and transcribed, mid-sort, is enough (the one on the landing page, `public/screenshot.png`, with a Spanish-interface twin `screenshot-es.png` on /es/, is exactly that: 797 unsorted, 70 in pass 1, 125 in junk, take #40 on line 17 "Estoy negociando."): the lane tabs with counts along the top (including Junk and Trash), the overview strip with the current take in amber, the waveform with IN/OUT and the amber playhead, the script panel with the character picker, per-line counts and the highlighted current line, the info line showing `line 43 · Espera, déjame terminar.` with its transcript, and the toolbar. That single frame contains every concept in this document.
 
 ---
 

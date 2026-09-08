@@ -12,7 +12,7 @@ Practical notes for working on Takekeeper. The product itself is described in `t
 - `src/audio/`: `wav.ts` (byte-level WAV source, lazy `Blob.slice`, decode/encode samples, header), `analyze.ts` (per-frame dB, `segment`, `segmentRange`), `export.ts` (clip blobs with fades, merged file, store-method zip, folder save via File System Access), `player.ts` (Web Audio playback with a `GainNode`).
 - `src/ai/`: `whisper.worker.ts` (transformers.js pipeline in a module worker), `transcriber.ts` (client, models, device detection), `audio.ts` (clip → mono 16 kHz), `align.ts` (normalisation, similarity, Viterbi `alignTakes`, `diagnose`, `groupWords`, `cleanTranscript`).
 - `src/ui/`: `Empty.tsx` (landing hero + sessions list), `Editor.tsx`, `Overview.tsx`, `ClipView.tsx`, `ScriptPanel.tsx`, `Toolbar.tsx`, `Modals.tsx` (settings, export, transcribe, help, goto), `Logo.tsx`.
-- `public/`: `screenshot.png`, `og.png`, `logo.svg`, `favicon.svg`, touch icons, `robots.txt`, `sitemap.xml`.
+- `public/`: `screenshot.png` / `screenshot-es.png` (editor in each language, same session and take), `og.png` / `og-es.png`, `logo.svg`, `favicon.svg`, touch icons, `robots.txt`, `sitemap.xml`.
 - `autoslice.py`: the original CLI, kept.
 
 ## Running and testing

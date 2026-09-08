@@ -127,7 +127,7 @@ Everything acts on the take under the amber playhead. Every key is also a toolba
 
 ## 6. Settings (all saved in the browser)
 
-Detection: silence threshold, minimum silence, margin, fade at cuts, re-detect. Listening: monitor gain, slow-motion speed, slow motion on `↑`, autoplay. Transcription: language (Spanish, English, auto), model (small, base), empty takes go to junk, re-cut takes with several reads. Editing: frame step, arrows move fast, split stays on the first half, context around a clip. Lanes and look: lane names, theme (auto, dark, light). Export: order (by line / by time), silent gaps between takes (on), gap after every take (1 s), gap between lines (2 s), file name prefix.
+Detection: silence threshold, minimum silence, margin, fade at cuts, re-detect. Listening: monitor gain, slow-motion speed, slow motion on `↑`, autoplay, line mode wraps around (on). Transcription: language (Spanish, English, auto), model (small, base), empty takes go to junk, re-cut takes with several reads. Editing: frame step, arrows move fast, split stays on the first half, context around a clip. Lanes and look: lane names, theme (auto, dark, light), interface language (auto, English, Spanish). Export: order (by line / by time), silent gaps between takes (on), gap after every take (1 s), gap between lines (2 s), file name prefix.
 
 ---
 

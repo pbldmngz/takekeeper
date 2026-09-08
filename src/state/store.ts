@@ -629,7 +629,14 @@ class Store {
     if (!c) return this.gotoClip(list[0].id, opts);
     const i = list.findIndex((x) => x.id === c.id);
     const next = list[i + dir];
-    if (!next) return this.toast(dir > 0 ? t('end of lane') : t('start of lane'));
+    if (!next) {
+      // one line's takes are a short ring: off the end, come back round. autoplay never wraps, it stops.
+      if (!this.state.lineMode || !this.state.settings.loopLine || list.length < 2) {
+        return this.toast(dir > 0 ? t('end of lane') : t('start of lane'));
+      }
+      this.toast(dir > 0 ? t('back to the first take') : t('back to the last take'));
+      return this.gotoClip(list[dir > 0 ? 0 : list.length - 1].id, opts);
+    }
     this.gotoClip(next.id, opts);
   }
 

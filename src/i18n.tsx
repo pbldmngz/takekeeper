@@ -179,6 +179,11 @@ const es = {
   'tape-style: pitch drops with speed.': 'como una cinta: el tono baja con la velocidad.',
   'slow motion on [[↑]]': 'cámara lenta con [[↑]]',
   'replay the previous clip at the slow speed. [[shift space]] always does.': 'repite el clip anterior a la velocidad lenta. [[shift space]] siempre lo hace.',
+  'line mode wraps around': 'el modo línea da la vuelta',
+  'on the last take of a line, [[↓]] goes back to the first. off stops there. autoplay always stops.':
+    'en la última toma de una línea, [[↓]] vuelve a la primera. desactivado se queda ahí. el autoplay siempre para.',
+  'back to the first take': 'vuelta a la primera toma',
+  'back to the last take': 'vuelta a la última toma',
   'continue to the next clip when one finishes.': 'pasa al clip siguiente cuando uno termina.',
   transcription: 'transcripción',
   'empty takes go to junk': 'las tomas vacías van a basura',

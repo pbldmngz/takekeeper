@@ -27,6 +27,7 @@ export interface Settings extends DetectParams {
   slowOnPrev: boolean; // ↑ replays the previous clip in slow motion
   gainDb: number; // monitoring boost, never exported
   autoplay: boolean;
+  loopLine: boolean; // in line mode, next on the last take comes back to the first
   theme: 'auto' | 'dark' | 'light';
   laneNames: string[];
   asrLanguage: 'spanish' | 'english' | 'auto';
@@ -54,6 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   slowOnPrev: false,
   gainDb: 0,
   autoplay: true,
+  loopLine: true,
   theme: 'auto',
   laneNames: ['Unsorted', 'Pass 1', 'Pass 2', 'Final'],
   asrLanguage: 'spanish',

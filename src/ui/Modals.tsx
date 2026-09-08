@@ -144,6 +144,17 @@ function SettingsModal() {
           <input type="checkbox" checked={st.autoplay} onChange={(e) => s.updateSettings({ autoplay: checked(e) })} />
         </div>
       </div>
+      <div class="row">
+        <label>
+          {t('line mode wraps around')}
+          <small>
+            <T k="on the last take of a line, [[↓]] goes back to the first. off stops there. autoplay always stops." />
+          </small>
+        </label>
+        <div class="val">
+          <input type="checkbox" checked={st.loopLine} onChange={(e) => s.updateSettings({ loopLine: checked(e) })} />
+        </div>
+      </div>
 
       <h3>{t('transcription')}</h3>
       <div class="row">

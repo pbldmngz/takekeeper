@@ -1,3 +1,6 @@
+import { lang, langUrl, t } from '../i18n';
+import { useStore } from '../state/store';
+
 /** The mark: two takes on the baseline, one lifted out: the promote gesture. */
 export function Mark() {
   return (
@@ -10,9 +13,21 @@ export function Mark() {
   );
 }
 
+/** The brand. In the editor it goes back to the landing; the recording stays loaded. */
 export function Logo() {
+  const s = useStore();
+  const inEditor = s.state.phase === 'ready';
   return (
-    <a class="brand" href="/" onClick={(e) => e.preventDefault()}>
+    <a
+      class="brand"
+      href={langUrl(lang())}
+      title={inEditor ? t('back to the landing') : undefined}
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let a new tab open
+        e.preventDefault();
+        if (inEditor) s.closeSession();
+      }}
+    >
       <Mark />
       takekeeper
     </a>

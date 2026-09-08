@@ -396,9 +396,31 @@ class Store {
     input.click();
   }
 
+  /** Back to the landing page. The recording stays loaded, so resuming is instant. */
+  closeSession() {
+    const s = this.state;
+    if (s.phase !== 'ready') return;
+    this.player.stop();
+    s.playing = false;
+    s.modal = null;
+    s.scriptEditing = false;
+    this.syncCursor();
+    if (s.project) void saveProject(s.project);
+    s.phase = 'empty';
+    void this.refreshSessions();
+    this.emit();
+  }
+
   async resume(key: string) {
     const r = this.state.sessions.find((x) => x.key === key);
     if (!r) return;
+    // still in memory from this session: no file dialog, no re-read
+    if (this.state.source && this.state.project?.key === key) {
+      this.state.phase = 'ready';
+      this.state.error = null;
+      this.emit();
+      return;
+    }
     const h = await idbGet<FileSystemFileHandle>(`handle:${r.key}`);
     if (h) {
       try {

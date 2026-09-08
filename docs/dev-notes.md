@@ -12,6 +12,7 @@ Practical notes for working on Takekeeper. The product itself is described in `t
 - `src/audio/`: `wav.ts` (byte-level WAV source, lazy `Blob.slice`, decode/encode samples, header), `analyze.ts` (per-frame dB, `segment`, `segmentRange`), `export.ts` (clip blobs with fades, merged file, store-method zip, folder save via File System Access), `player.ts` (Web Audio playback with a `GainNode`).
 - `src/ai/`: `whisper.worker.ts` (transformers.js pipeline in a module worker), `transcriber.ts` (client, models, device detection), `audio.ts` (clip → mono 16 kHz), `align.ts` (normalisation, similarity, Viterbi `alignTakes`, `diagnose`, `groupWords`, `cleanTranscript`).
 - `src/ui/`: `Empty.tsx` (landing hero + sessions list), `Editor.tsx`, `Overview.tsx`, `ClipView.tsx`, `ScriptPanel.tsx`, `Toolbar.tsx`, `Modals.tsx` (settings, export, transcribe, help, goto), `Logo.tsx`.
+- `src/links.ts`: the author's site and the support page (`?type=bug|suggestion&lang=`), the only outbound links; nothing about the session ever goes in a query string.
 - `public/`: `screenshot.png` / `screenshot-es.png` (editor in each language, same session and take), `og.png` / `og-es.png`, `logo.svg`, `favicon.svg`, touch icons, `robots.txt`, `sitemap.xml`.
 - `autoslice.py`: the original CLI, kept.
 
@@ -39,6 +40,8 @@ Practical notes for working on Takekeeper. The product itself is described in `t
 - UI copy is lowercase, terse, no em dashes; keys shown as `[key]`.
 - Design tokens in `styles.css`: cyan structure, amber focus, coral trash, mint playing; light theme overrides under `[data-theme='light']`.
 - Every keyboard action is also a toolbar button; help modal, landing key table and README must all be updated when a key changes.
+- Support and author links live in three places: the landing footer (static, both `index.html` and `landing/es.html`, with the copyright line), the help modal's `support` block, and the error box on the landing. `lang` follows the interface language at click time.
+- The brand in the editor header calls `closeSession()`: back to the landing with the recording still in memory, so `resume` on that session returns instantly instead of re-picking the file. Ctrl or middle click still opens the real landing URL.
 - Commit messages: short imperative title; trailer `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ## Localisation and SEO

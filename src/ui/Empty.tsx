@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { useStore } from '../state/store';
 import { T, lang, t } from '../i18n';
+import { support } from '../links';
 import { Logo } from './Logo';
 
 /** [es] on the English page, [en] on the Spanish one; amber when the browser prefers the other language. */
@@ -124,9 +125,14 @@ export function Empty() {
           {error && (
             <div class="error">
               <span>{error}</span>
-              <button class="k" onClick={() => s.clearError()}>
-                {t('dismiss')}
-              </button>
+              <span class="actions">
+                <a class="k" href={support('bug')} target="_blank" rel="noopener noreferrer">
+                  {t('report a bug')}
+                </a>
+                <button class="k" onClick={() => s.clearError()}>
+                  {t('dismiss')}
+                </button>
+              </span>
             </div>
           )}
         </section>

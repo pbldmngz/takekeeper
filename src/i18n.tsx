@@ -190,8 +190,8 @@ const es = {
   'breaths, slates and false starts with no words move to the junk lane for a quick review.':
     'respiraciones, claquetas y falsos inicios sin palabras pasan al carril de basura para revisarlos rápido.',
   're-cut takes with several reads': 're-cortar tomas con varias lecturas',
-  'a take that repeats its line is cut at the pauses inside it and the pieces transcribed.':
-    'una toma que repite su línea se corta en las pausas internas y se transcriben los trozos.',
+  'a take that repeats its line is cut at the pauses inside it, then what is left is re-cut by word: reads with no pause between them, false starts, and lines a pause split in two.':
+    'una toma que repite su línea se corta en las pausas internas y después lo que queda se re-corta por palabras: lecturas sin pausa entre ellas, falsos inicios y líneas que una pausa partió en dos.',
   editing: 'edición',
   'frame step': 'paso',
   'one frame. alt steps a tenth of it.': 'un paso. alt avanza una décima.',

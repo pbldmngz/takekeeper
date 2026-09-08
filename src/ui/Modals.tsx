@@ -169,7 +169,7 @@ function SettingsModal() {
       <div class="row">
         <label>
           {t('re-cut takes with several reads')}
-          <small>{t('a take that repeats its line is cut at the pauses inside it and the pieces transcribed.')}</small>
+          <small>{t('a take that repeats its line is cut at the pauses inside it, then what is left is re-cut by word: reads with no pause between them, false starts, and lines a pause split in two.')}</small>
         </label>
         <div class="val">
           <input type="checkbox" checked={st.autoSplit} onChange={(e) => s.updateSettings({ autoSplit: checked(e) })} />

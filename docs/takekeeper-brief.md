@@ -107,7 +107,7 @@ Everything acts on the take under the amber playhead. Every key is also a toolba
 | `1`…`9`, `0` | Send to lane N / back to Unsorted |
 | `Tab` / `Shift+Tab` | Next / previous lane, Junk and Trash included |
 | `=` / `-` | Monitor gain up / down (listening only) |
-| `R` / `A` | Loop the current take / toggle autoplay |
+| `R` / `A` | Loop the current take (repeats on its own with autoplay on; otherwise play replays it) / toggle autoplay |
 | `S` / `Shift+S` | Split at playhead, staying on the first half / the second (default is a setting) |
 | `M` / `Shift+M` | Merge with next / previous (restores the audio between them) |
 | `I` / `O` | Set take start / end at playhead |

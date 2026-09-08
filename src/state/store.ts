@@ -698,7 +698,8 @@ class Store {
       const pos = this.state.pos;
       if (pos < c.start) return void this.playFrom(c.start, false); // before IN: this clip from its start
       if (pos >= c.end) {
-        // at or past OUT: the next clip in this lane
+        // at or past OUT: this take again when loop is on, otherwise the next clip in this lane
+        if (this.state.loop) return void this.playFrom(c.start, false);
         const list = this.laneList();
         const next = list[list.findIndex((x) => x.id === c.id) + 1];
         if (next) return this.gotoClip(next.id, { play: true });
@@ -729,7 +730,7 @@ class Store {
     this.state.playing = false;
     const endedAtClipEnd = c ? this.player.position() >= c.end - 1 : false;
     this.state.pos = c ? Math.min(this.player.position(), c.end) : 0;
-    if (c && endedAtClipEnd && this.state.loop && this.state.modal === null) {
+    if (c && endedAtClipEnd && this.state.loop && this.state.settings.autoplay && this.state.modal === null) {
       return void this.playFrom(c.start, this.state.slow);
     }
     if (c && endedAtClipEnd && this.state.settings.autoplay && this.state.modal === null) {
@@ -745,7 +746,7 @@ class Store {
   toggleLoop() {
     const s = this.state;
     s.loop = !s.loop;
-    this.toast(s.loop ? t('loop on · this take repeats') : t('loop off'));
+    this.toast(s.loop ? (s.settings.autoplay ? t('loop on · this take repeats') : t('loop on · play repeats this take')) : t('loop off'));
     if (s.loop && !s.playing) {
       const c = this.clip();
       if (c) void this.playFrom(c.start, false);

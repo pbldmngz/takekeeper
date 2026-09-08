@@ -345,6 +345,7 @@ const es = {
   'end of lane': 'fin del carril',
   'start of lane': 'inicio del carril',
   'loop on · this take repeats': 'bucle on · esta toma se repite',
+  'loop on · play repeats this take': 'bucle on · reproducir repite esta toma',
   'loop off': 'bucle off',
   'already in {lane}': 'ya está en {lane}',
   '→ {lane}': '→ {lane}',

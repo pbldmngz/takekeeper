@@ -575,16 +575,10 @@ footer.site .site-legal {
   align-items: center;
   gap: 2px;
 }
-.modal .support {
+.modal .foot .support {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 8px;
-  margin-left: -6px;
-}
-.modal .support .by {
-  color: var(--dim);
-  margin: 0 4px 0 10px;
+  gap: 2px 4px;
 }
 
 /* editor ---------------------------------------------------------------- */

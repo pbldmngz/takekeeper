@@ -40,7 +40,7 @@ Practical notes for working on Takekeeper. The product itself is described in `t
 - UI copy is lowercase, terse, no em dashes; keys shown as `[key]`.
 - Design tokens in `styles.css`: cyan structure, amber focus, coral trash, mint playing; light theme overrides under `[data-theme='light']`.
 - Every keyboard action is also a toolbar button; help modal, landing key table and README must all be updated when a key changes.
-- Support and author links live in three places: the landing footer (static, both `index.html` and `landing/es.html`, with the copyright line), the help modal's `support` block, and the error box on the landing. `lang` follows the interface language at click time.
+- Author and support links: the landing footer (static, both `index.html` and `landing/es.html`, with the copyright line) carries all four; the help modal and the landing error box carry only report a bug / suggest a feature, in the modal's `.foot .left` so they line up with the close button. `lang` follows the interface language at click time.
 - The brand in the editor header calls `closeSession()`: back to the landing with the recording still in memory, so `resume` on that session returns instantly instead of re-picking the file. Ctrl or middle click still opens the real landing URL.
 - Commit messages: short imperative title; trailer `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 

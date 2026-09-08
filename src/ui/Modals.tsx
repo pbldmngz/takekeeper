@@ -5,7 +5,7 @@ import { TRASH, finalLane, laneClips } from '../state/project';
 import { useStore } from '../state/store';
 import { MODELS, detectDevice } from '../ai/transcriber';
 import { T, laneLabel, t, type Key } from '../i18n';
-import { PORTFOLIO, PROJECTS, support } from '../links';
+import { support } from '../links';
 import { fmtDur, pad, stem } from '../util';
 
 export function Modals() {
@@ -593,23 +593,15 @@ function HelpModal() {
           </div>
         ))}
       </div>
-      <h3>{t('support')}</h3>
-      <div class="support">
-        <a class="k" href={support('bug')} target="_blank" rel="noopener noreferrer">
-          {t('report a bug')}
-        </a>
-        <a class="k" href={support('suggestion')} target="_blank" rel="noopener noreferrer">
-          {t('suggest a feature')}
-        </a>
-        <span class="by">{t('made by pablo domínguez')}</span>
-        <a class="k" href={PORTFOLIO} target="_blank" rel="noopener noreferrer">
-          {t('portfolio')}
-        </a>
-        <a class="k" href={PROJECTS} target="_blank" rel="noopener noreferrer">
-          {t('other projects')}
-        </a>
-      </div>
       <div class="foot">
+        <span class="left support">
+          <a class="k" href={support('bug')} target="_blank" rel="noopener noreferrer">
+            {t('report a bug')}
+          </a>
+          <a class="k" href={support('suggestion')} target="_blank" rel="noopener noreferrer">
+            {t('suggest a feature')}
+          </a>
+        </span>
         <button class="k" onClick={() => s.openModal(null)}>
           {t('close')} <kbd>esc</kbd>
         </button>

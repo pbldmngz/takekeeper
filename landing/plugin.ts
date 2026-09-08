@@ -22,9 +22,9 @@ const EN: Meta = {
   title: 'Takekeeper: sort voice-over takes in your browser',
   description:
     'Drop an hour-long WAV of voice-over takes. Takekeeper cuts it at the silences, transcribes every take on your own GPU, matches each one to your script, and lets you keep the good ones line by line with the keyboard. Multi-pass lanes, junk detection, split, merge, trim, export straight into FL Studio or any DAW. Free, private, nothing uploaded.',
-  ogTitle: 'Takekeeper: the takes worth keeping',
+  ogTitle: 'Takekeeper: split a recording session into takes. keep the good ones.',
   ogDescription:
-    'Take triage for voice actors. Split a session at the silences, transcribe on your GPU, sort takes line by line into passes with the keyboard, export the keepers. Runs in your browser, nothing uploaded.',
+    'Drop the long WAV from a voice-over session. It is cut at every silence, each take is matched to your script, and you keep the good ones line by line with one key. Runs in your browser on your own GPU. Nothing uploaded.',
   appDescription:
     'Take triage for voice actors: split a long voice-over recording at the silences, transcribe every take with Whisper on your own GPU, match takes to script lines, sort them line by line into passes with the keyboard, fix cuts, and export the keepers as numbered WAV files. Runs entirely in the browser; nothing is uploaded.',
   audience: 'Voice actors, audiobook narrators, dubbing and ADR performers',

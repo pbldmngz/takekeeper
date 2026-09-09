@@ -71,7 +71,7 @@ body {
   color: var(--text);
   background-color: var(--ink);
   background-image: repeating-linear-gradient(0deg, var(--scan) 0 1px, transparent 1px 3px),
-    radial-gradient(900px 500px at 15% -10%, var(--cyan-dim), transparent 65%);
+    radial-gradient(900px 500px at 85% -10%, var(--cyan-dim), transparent 65%);
   -webkit-font-smoothing: antialiased;
 }
 body[data-phase='ready'],
@@ -291,41 +291,49 @@ hr {
 .hero {
   max-width: 760px;
   margin: 0 auto;
-  padding: 88px 20px 40px;
+  padding: 44px 20px 28px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 .hero .eyebrow {
-  color: var(--amber);
+  color: var(--muted);
   font-size: 13px;
-  margin-bottom: -6px;
+  margin-bottom: -4px;
 }
 .hero .eyebrow::before {
   content: '> ';
   color: var(--dim);
 }
+/* the title is the one thing on the page written by a person, so it is not structural cyan.
+   29px keeps the longest spanish line at 696 of the 720px box, with room for the font swap. */
 .hero h1 {
-  font-size: clamp(26px, 3.6vw, 36px);
-  color: var(--cyan);
-  line-height: 1.2;
-  max-width: 24ch;
+  font-size: clamp(20px, 2vw, 29px);
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+.hero h1 span {
+  display: block;
 }
 .hero .lead {
-  font-size: 14.5px;
+  font-size: 15px;
   color: var(--muted);
-  max-width: 66ch;
+  max-width: 80ch;
   line-height: 1.7;
 }
 .hero .lead b {
   color: var(--text);
   font-weight: 500;
 }
+/* the only lit thing above the fold: amber at rest, and the border style is what changes on contact */
 .drop {
-  margin-top: 22px;
-  min-height: 200px;
-  border: 1px dashed var(--rule-2);
+  margin-top: 6px;
+  width: 100%;
+  padding: 24px 20px;
+  border: 1px dashed var(--amber);
+  background: color-mix(in srgb, var(--amber) 7%, transparent);
   display: grid;
-  place-content: center;
   justify-items: center;
   gap: 8px;
   text-align: center;
@@ -336,15 +344,42 @@ hr {
   font-size: 18px;
   color: var(--text);
 }
-.drop.over,
 .drop:hover {
-  border-color: var(--amber);
   border-style: solid;
   background: var(--amber-dim);
+}
+.drop.over {
+  border-style: solid;
+  border-color: var(--amber-2);
+  background: color-mix(in srgb, var(--amber) 22%, transparent);
+}
+/* the pre-hydration copy in index.html: same box, no promises it cannot keep */
+.drop.static {
+  cursor: default;
 }
 .sessions {
   display: grid;
   gap: 6px;
+}
+.sessions .back {
+  color: var(--dim);
+  font-size: 12.5px;
+  margin: 2px 0 2px;
+}
+/* narrow desktop windows: nothing here is a phone design, it just must not scroll sideways */
+@media (max-width: 620px) {
+  .top .actions kbd {
+    display: none;
+  }
+  .resume {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .resume b {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 .resume {
   display: flex;
@@ -394,7 +429,7 @@ hr {
 #landing {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 20px 80px;
+  padding: 0 20px 80px;
   display: grid;
   gap: 64px;
 }

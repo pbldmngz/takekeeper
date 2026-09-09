@@ -55,15 +55,15 @@ export function Empty() {
         </div>
       ) : (
         <section class="hero">
-          <p class="eyebrow">{t('for voice actors')}</p>
-          <h1>{t('split a recording session into takes. keep the good ones.')}</h1>
-          <p class="lead">
-            {t(
-              'drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and matches it to your script, then you keep the good ones line by line with a single key and export the keepers as numbered files for fl studio, reaper or any daw.',
-            )}
-          </p>
+          <p class="eyebrow">{t('for voice actors and narrators. it is free.')}</p>
+          <h1>
+            <span>{t('one session in, a folder of takes out.')}</span>
+            <span>{t('split at the silences, keep the best.')}</span>
+          </h1>
+          <p class="lead">{t('each take is cut at the silence around it, transcribed and filed under its script line. you keep the ones you want with one key.')}</p>
 
-          <div
+          <button
+            type="button"
             class={`drop${over ? ' over' : ''}`}
             onClick={() => void s.pickFile()}
             onDragOver={(e) => {
@@ -75,15 +75,13 @@ export function Empty() {
           >
             <span class="big">{t('drop your session wav here')}</span>
             <span class="muted">
-              <T k="or press [[ctrl o]] to browse · any length · nothing is uploaded" />
+              <T k="or press [[ctrl o]] to browse · any length · nothing leaves your computer" />
             </span>
-            <span class="dim">
-              <T k="a saved **.takekeeper.json** project can be dropped here too, then its wav" />
-            </span>
-          </div>
+          </button>
 
           {sessions.length > 0 && (
             <div class="sessions">
+              <p class="back">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</p>
               {sessions.map((r) => {
                 const asking = confirm === r.key;
                 return (

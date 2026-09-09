@@ -8,7 +8,7 @@ A reference document about Takekeeper (takekeeper.com) for writing articles, pos
 
 Takekeeper is a free, browser-based take-selection tool for voice actors. You record a session as one long WAV, take after take with silence between them, and drop that file on the page. It splits the recording into individual takes in seconds, transcribes each take on your own GPU (nothing is uploaded), matches every take to the line of your script it belongs to, and then lets you keep the good ones line by line with the keyboard alone, in as many passes as you need. The keepers export as numbered WAV files in script order, with silent gap files between them, so the folder drops onto one FL Studio track already spaced and ordered.
 
-**Taglines in use:** "the takes worth keeping." (headline) · "take triage for voice actors" (descriptor) · "split a recording session into takes. keep the good ones." (hero).
+**Taglines in use:** "one session in, a folder of takes out. split at the silences, keep the best." (hero, and the OG image verbatim) · "take triage for voice actors" (descriptor) · "entra una sesión, salen tomas numeradas. corta en los silencios, elige lo bueno." (Spanish hero).
 
 ---
 

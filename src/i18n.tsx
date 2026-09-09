@@ -11,13 +11,14 @@ const es = {
   // landing / hero
   settings: 'ajustes',
   keys: 'teclas',
-  'for voice actors': 'para actores de doblaje y locutores',
-  'split a recording session into takes. keep the good ones.': 'divide una sesión de grabación en tomas. quédate con las buenas.',
-  'drop the one long wav from your session. takekeeper cuts it at every silence, transcribes each take on your own gpu and matches it to your script, then you keep the good ones line by line with a single key and export the keepers as numbered files for fl studio, reaper or any daw.':
-    'suelta el wav largo de tu sesión. takekeeper lo corta en cada silencio, transcribe cada toma en tu propia gpu y la empareja con tu guion; después eliges las buenas línea a línea con una sola tecla y exportas las elegidas como archivos numerados para fl studio, reaper o cualquier daw.',
+  'for voice actors and narrators. it is free.': 'para actores de doblaje y locutores. es gratis.',
+  'one session in, a folder of takes out.': 'entra una sesión, salen tomas numeradas.',
+  'split at the silences, keep the best.': 'corta en los silencios, elige lo bueno.',
+  'each take is cut at the silence around it, transcribed and filed under its script line. you keep the ones you want with one key.':
+    'cada toma se corta en el silencio, se transcribe y se archiva bajo su línea de guion. te quedas con las buenas con una sola tecla.',
   'drop your session wav here': 'suelta aquí el wav de tu sesión',
-  'or press [[ctrl o]] to browse · any length · nothing is uploaded': 'o pulsa [[ctrl o]] para buscarlo · cualquier duración · no se sube nada',
-  'a saved **.takekeeper.json** project can be dropped here too, then its wav': 'también puedes soltar aquí un proyecto **.takekeeper.json** guardado y después su wav',
+  'or press [[ctrl o]] to browse · any length · nothing leaves your computer': 'o pulsa [[ctrl o]] para buscarlo · cualquier duración · no se sube nada',
+  'coming back to one? drop the .takekeeper.json you saved, then its wav': '¿vuelves a una? suelta el .takekeeper.json que guardaste y después su wav',
   'forget the sorting for': 'olvidar la selección de',
   continue: 'continuar',
   '? the recording stays where it is': '? la grabación se queda donde está',

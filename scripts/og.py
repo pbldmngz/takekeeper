@@ -12,15 +12,15 @@ R = lambda s: ImageFont.truetype(f"{fonts}/jbm-400.ttf", s)
 
 COPY = {
     "en": {
-        "title": ["split a recording session into takes.", "keep the good ones."],
-        "sub": ["drop your session wav. it is cut at every silence and each take", "is matched to your script. keep the good ones with one key."],
+        "title": ["one session in, a folder of takes out.", "split at the silences, keep the best."],
+        "sub": ["every take cut at the silence around it, transcribed and filed", "under its script line. you keep the ones you want with one key."],
         "keys": [("[enter]", "keep", AMBER), ("[backspace]", "drop", DIM), ("[w]", "transcribe", DIM), ("[g]", "by line", DIM)],
         "foot": "takekeeper.com  ·  free  ·  private  ·  nothing uploaded  ·  spanish & english",
         "file": "public/og.png",
     },
     "es": {
-        "title": ["divide una sesión de grabación en tomas.", "quédate con las buenas."],
-        "sub": ["suelta el wav de tu sesión. se corta en cada silencio y cada toma", "se empareja con tu guion. elige las buenas con una sola tecla."],
+        "title": ["entra una sesión, salen tomas numeradas.", "corta en los silencios, elige lo bueno."],
+        "sub": ["cada toma cortada en el silencio, transcrita y archivada bajo su", "línea de guion. te quedas con las buenas con una sola tecla."],
         "keys": [("[enter]", "subir", AMBER), ("[backspace]", "tirar", DIM), ("[w]", "transcribir", DIM), ("[g]", "por línea", DIM)],
         "foot": "takekeeper.com  ·  gratis  ·  privado  ·  no se sube nada  ·  español e inglés",
         "file": "public/og-es.png",

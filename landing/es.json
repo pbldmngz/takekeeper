@@ -1,7 +1,7 @@
 {
   "title": "Takekeeper: selecciona tomas de voz en tu navegador",
   "description": "Suelta el WAV de una hora con tus tomas de doblaje o locución. Takekeeper lo corta por los silencios, transcribe cada toma en tu propia GPU, la empareja con tu guion y te deja quedarte con las buenas línea a línea con el teclado. Carriles por pasadas, detección de basura, cortar, unir, recortar, exportar directo a FL Studio o cualquier DAW. Gratis, privado, no se sube nada.",
-  "ogTitle": "Takekeeper: divide una sesión de grabación en tomas. quédate con las buenas.",
+  "ogTitle": "Takekeeper: entra una sesión, salen tomas numeradas.",
   "ogDescription": "Suelta el WAV largo de una sesión de doblaje o locución. Se corta en cada silencio, cada toma se empareja con tu guion y eliges las buenas línea a línea con una sola tecla. Corre en tu navegador, en tu propia GPU. No se sube nada.",
   "appDescription": "Selección de tomas para actores de doblaje y locutores: divide una grabación de voz larga por los silencios, transcribe cada toma con Whisper en tu propia GPU, empareja las tomas con las líneas del guion, ordénalas línea a línea en pasadas con el teclado, corrige los cortes y exporta las elegidas como archivos WAV numerados. Corre por completo en el navegador; no se sube nada.",
   "ogImage": "https://takekeeper.com/og-es.png",

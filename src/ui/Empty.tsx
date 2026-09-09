@@ -18,7 +18,7 @@ export function LangSwitch() {
 
 export function Empty() {
   const s = useStore();
-  const { phase, progress, status, error, sessions } = s.state;
+  const { phase, progress, status, error, sessions, pending } = s.state;
   const [over, setOver] = useState(false);
   const [confirm, setConfirm] = useState<string | null>(null); // key of the row asking "are you sure?"
 
@@ -79,7 +79,11 @@ export function Empty() {
             <span class="muted">
               <T k="or press [[ctrl o]] to browse · any length · your file is never changed" />
             </span>
-            {sessions.length > 0 && <span class="dim">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</span>}
+            {pending ? (
+              <span class="pending">{t('project loaded · now drop {name}', { name: pending.name })}</span>
+            ) : sessions.length > 0 ? (
+              <span class="dim">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</span>
+            ) : null}
           </button>
 
           {sessions.length > 0 && (

@@ -69,6 +69,7 @@ export interface AppState {
   status: string;
   error: string | null;
   sessions: SessionInfo[]; // saved projects, newest first
+  pending: { name: string; key: string } | null; // a project file is loaded and waiting for its recording
   toast: { text: string; n: number } | null;
   scriptEditing: boolean;
   unsaved: number; // edits since the project was last saved to a file
@@ -99,6 +100,7 @@ class Store {
     status: '',
     error: null,
     sessions: [],
+    pending: null,
     toast: null,
     scriptEditing: false,
     unsaved: 0,
@@ -291,7 +293,7 @@ class Store {
 
   // ---------- loading ----------
 
-  async openFile(file: File, handle: FileSystemFileHandle | null = null) {
+  async openFile(file: File, handle: FileSystemFileHandle | null = null): Promise<void> {
     const s = this.state;
     if (/\.json$/i.test(file.name) || file.type === 'application/json') return this.importProjectFile(file);
     this.player.stop();
@@ -338,6 +340,7 @@ class Store {
       s.lineMode = false;
       s.lineFilter = null;
       s.phase = 'ready';
+      s.pending = null;
       this.maybeTour();
       s.progress = null;
       s.status = '';
@@ -415,7 +418,7 @@ class Store {
     this.emit();
   }
 
-  async resume(key: string) {
+  async resume(key: string): Promise<void> {
     const r = this.state.sessions.find((x) => x.key === key);
     if (!r) return;
     // still in memory from this session: no file dialog, no re-read
@@ -446,7 +449,7 @@ class Store {
   }
 
   /** Load a saved project file; the matching recording is picked afterwards. */
-  async importProjectFile(file: File) {
+  async importProjectFile(file: File): Promise<void> {
     const s = this.state;
     try {
       const p = parseProjectFile(await file.text());
@@ -465,6 +468,12 @@ class Store {
         return;
       }
       s.error = null;
+      // this browser may still hold the handle from an earlier visit, in which case the recording opens itself
+      if (await idbGet<FileSystemFileHandle>(`handle:${p.key}`)) {
+        this.emit();
+        return this.resume(p.key);
+      }
+      s.pending = { name: p.name, key: p.key };
       this.toast(t('project loaded · now drop {name}', { name: p.name }));
     } catch (e) {
       this.fail(e);
@@ -495,6 +504,7 @@ class Store {
     if (!r) return;
     await deleteProject(key);
     await idbDel(`handle:${key}`);
+    if (this.state.pending?.key === key) this.state.pending = null;
     await this.refreshSessions();
     this.toast(t('forgot {name}', { name: r.name }));
   }

@@ -350,6 +350,11 @@ hr {
 .drop .dim {
   font-size: 12px;
 }
+/* the project file landed and the recording is what is missing: the one thing to read in the box */
+.drop .pending {
+  font-size: 13px;
+  color: var(--amber-2);
+}
 .drop:hover {
   border-style: solid;
   background: var(--amber-dim);

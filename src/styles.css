@@ -291,14 +291,14 @@ hr {
 .hero {
   max-width: 760px;
   margin: 0 auto;
-  padding: 44px 20px 28px;
+  padding: 56px 20px 24px;
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 .hero .eyebrow {
   color: var(--muted);
   font-size: 13px;
-  margin-bottom: -4px;
+  margin-bottom: -8px;
 }
 .hero .eyebrow::before {
   content: '> ';
@@ -313,7 +313,7 @@ hr {
   font-size: clamp(20px, 2.2vw, 32px);
   color: var(--cyan);
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.4;
   letter-spacing: 0;
 }
 .hero h1 span {
@@ -331,14 +331,14 @@ hr {
 }
 /* the only lit thing above the fold: amber at rest, and the border style is what changes on contact */
 .drop {
-  margin-top: 6px;
+  margin-top: 4px;
   width: 100%;
-  padding: 24px 20px;
+  padding: 30px 24px;
   border: 1px dashed var(--amber);
   background: color-mix(in srgb, var(--amber) 7%, transparent);
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: 12px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;

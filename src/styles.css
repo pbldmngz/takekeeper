@@ -304,6 +304,10 @@ hr {
   content: '> ';
   color: var(--dim);
 }
+.hero .eyebrow b {
+  color: var(--text);
+  font-weight: 500;
+}
 /* the title is the one thing on the page written by a person, so it is not structural cyan.
    32px keeps the longest line (english, 35 characters) at 672 of the 720px box. */
 .hero h1 {

@@ -55,7 +55,9 @@ export function Empty() {
         </div>
       ) : (
         <section class="hero">
-          <p class="eyebrow">{t('for voice actors and narrators. it is free.')}</p>
+          <p class="eyebrow">
+            <T k="for voice actors and narrators. it is free. **nothing gets uploaded**." />
+          </p>
           <h1>
             <span>{t('split your session at the silences.')}</span>
             <span>{t('keep the good takes.')}</span>
@@ -75,7 +77,7 @@ export function Empty() {
           >
             <span class="big">{t('drop your session wav here')}</span>
             <span class="muted">
-              <T k="or press [[ctrl o]] to browse · any length · nothing leaves your computer" />
+              <T k="or press [[ctrl o]] to browse · any length · your file is never changed" />
             </span>
             {sessions.length > 0 && <span class="dim">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</span>}
           </button>

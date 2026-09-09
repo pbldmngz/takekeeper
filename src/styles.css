@@ -308,11 +308,10 @@ hr {
   color: var(--text);
   font-weight: 500;
 }
-/* the title is the one thing on the page written by a person, so it is not structural cyan.
-   32px keeps the longest line (english, 35 characters) at 672 of the 720px box. */
+/* 32px keeps the longest line (english, 35 characters) at 672 of the 720px box. */
 .hero h1 {
   font-size: clamp(20px, 2.2vw, 32px);
-  color: var(--text);
+  color: var(--cyan);
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: 0;
@@ -347,6 +346,9 @@ hr {
 .drop .big {
   font-size: 18px;
   color: var(--text);
+}
+.drop .dim {
+  font-size: 12px;
 }
 .drop:hover {
   border-style: solid;

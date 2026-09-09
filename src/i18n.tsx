@@ -14,8 +14,8 @@ const es = {
   'for voice actors and narrators. it is free. **nothing gets uploaded**.': 'para actores de doblaje y locutores. es gratis. **no se sube nada**.',
   'split your session at the silences.': 'corta tu sesión en los silencios.',
   'keep the good takes.': 'quédate con las tomas buenas.',
-  'each take is cut at the silence around it, transcribed and filed under its script line. you keep the ones you want with one key.':
-    'cada toma se corta en el silencio, se transcribe y se archiva bajo su línea de guion. te quedas con las buenas con una sola tecla.',
+  'every take is cut at the silence around it. transcription sharpens the cuts and files each take under its script line, so the takes of one line play back to back and you narrow them down over several passes. all from the keyboard.':
+    'cada toma se corta en el silencio que la rodea. la transcripción afina los cortes y archiva cada toma bajo su línea de guion, así que las tomas de una línea suenan seguidas y las filtras pasada a pasada. todo con el teclado.',
   'drop your session wav here': 'suelta aquí el wav de tu sesión',
   'or press [[ctrl o]] to browse · any length · your file is never changed': 'o pulsa [[ctrl o]] para buscarlo · cualquier duración · tu archivo no se toca',
   'coming back to one? drop the .takekeeper.json you saved, then its wav': '¿vuelves a una? suelta el .takekeeper.json que guardaste y después su wav',

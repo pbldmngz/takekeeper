@@ -13,14 +13,14 @@ R = lambda s: ImageFont.truetype(f"{fonts}/jbm-400.ttf", s)
 COPY = {
     "en": {
         "title": ["split your session at the silences.", "keep the good takes."],
-        "sub": ["every take cut at the silence around it, transcribed and filed", "under its script line. you keep the ones you want with one key."],
+        "sub": ["every take cut at the silence around it, transcribed and", "filed under its line. you narrow them down, all by keyboard."],
         "keys": [("[enter]", "keep", AMBER), ("[backspace]", "drop", DIM), ("[w]", "transcribe", DIM), ("[g]", "by line", DIM)],
         "foot": "takekeeper.com  ·  free  ·  private  ·  nothing uploaded  ·  spanish & english",
         "file": "public/og.png",
     },
     "es": {
         "title": ["corta tu sesión en los silencios.", "quédate con las tomas buenas."],
-        "sub": ["cada toma cortada en el silencio, transcrita y archivada bajo su", "línea de guion. te quedas con las buenas con una sola tecla."],
+        "sub": ["cada toma cortada en el silencio, transcrita y archivada", "bajo su línea. las filtras en pasadas, todo con el teclado."],
         "keys": [("[enter]", "subir", AMBER), ("[backspace]", "tirar", DIM), ("[w]", "transcribir", DIM), ("[g]", "por línea", DIM)],
         "foot": "takekeeper.com  ·  gratis  ·  privado  ·  no se sube nada  ·  español e inglés",
         "file": "public/og-es.png",

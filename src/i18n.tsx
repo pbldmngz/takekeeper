@@ -12,8 +12,8 @@ const es = {
   settings: 'ajustes',
   keys: 'teclas',
   'for voice actors and narrators. it is free.': 'para actores de doblaje y locutores. es gratis.',
-  'one session in, a folder of takes out.': 'entra una sesión, salen tomas numeradas.',
-  'split at the silences, keep the best.': 'corta en los silencios, elige lo bueno.',
+  'split your session at the silences.': 'corta tu sesión en los silencios.',
+  'keep the good takes.': 'quédate con las tomas buenas.',
   'each take is cut at the silence around it, transcribed and filed under its script line. you keep the ones you want with one key.':
     'cada toma se corta en el silencio, se transcribe y se archiva bajo su línea de guion. te quedas con las buenas con una sola tecla.',
   'drop your session wav here': 'suelta aquí el wav de tu sesión',

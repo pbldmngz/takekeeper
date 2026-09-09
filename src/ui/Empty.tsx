@@ -57,8 +57,8 @@ export function Empty() {
         <section class="hero">
           <p class="eyebrow">{t('for voice actors and narrators. it is free.')}</p>
           <h1>
-            <span>{t('one session in, a folder of takes out.')}</span>
-            <span>{t('split at the silences, keep the best.')}</span>
+            <span>{t('split your session at the silences.')}</span>
+            <span>{t('keep the good takes.')}</span>
           </h1>
           <p class="lead">{t('each take is cut at the silence around it, transcribed and filed under its script line. you keep the ones you want with one key.')}</p>
 
@@ -77,11 +77,11 @@ export function Empty() {
             <span class="muted">
               <T k="or press [[ctrl o]] to browse · any length · nothing leaves your computer" />
             </span>
+            {sessions.length > 0 && <span class="dim">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</span>}
           </button>
 
           {sessions.length > 0 && (
             <div class="sessions">
-              <p class="back">{t('coming back to one? drop the .takekeeper.json you saved, then its wav')}</p>
               {sessions.map((r) => {
                 const asking = confirm === r.key;
                 return (

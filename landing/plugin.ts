@@ -22,7 +22,7 @@ const EN: Meta = {
   title: 'Takekeeper: sort voice-over takes in your browser',
   description:
     'Drop an hour-long WAV of voice-over takes. Takekeeper cuts it at the silences, transcribes every take on your own GPU, matches each one to your script, and lets you keep the good ones line by line with the keyboard. Multi-pass lanes, junk detection, split, merge, trim, export straight into FL Studio or any DAW. Free, private, nothing uploaded.',
-  ogTitle: 'Takekeeper: one session in, a folder of takes out.',
+  ogTitle: 'Takekeeper: split your session at the silences. keep the good takes.',
   ogDescription:
     'Drop the long WAV from a voice-over session. It is cut at every silence, each take is matched to your script, and you keep the good ones line by line with one key. Runs in your browser on your own GPU. Nothing uploaded.',
   appDescription:

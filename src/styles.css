@@ -305,9 +305,9 @@ hr {
   color: var(--dim);
 }
 /* the title is the one thing on the page written by a person, so it is not structural cyan.
-   29px keeps the longest spanish line at 696 of the 720px box, with room for the font swap. */
+   32px keeps the longest line (english, 35 characters) at 672 of the 720px box. */
 .hero h1 {
-  font-size: clamp(20px, 2vw, 29px);
+  font-size: clamp(20px, 2.2vw, 32px);
   color: var(--text);
   font-weight: 500;
   line-height: 1.35;
@@ -360,11 +360,6 @@ hr {
 .sessions {
   display: grid;
   gap: 6px;
-}
-.sessions .back {
-  color: var(--dim);
-  font-size: 12.5px;
-  margin: 2px 0 2px;
 }
 /* narrow desktop windows: nothing here is a phone design, it just must not scroll sideways */
 @media (max-width: 620px) {

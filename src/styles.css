@@ -589,12 +589,12 @@ details > p {
 }
 footer.site {
   border-top: 1px solid var(--rule);
-  padding-top: 18px;
+  padding-top: 30px;
   color: var(--dim);
   font-size: 12.5px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 16px 28px;
 }
 /* each on its own line under the four spans */
 footer.site .site-links,
@@ -604,12 +604,13 @@ footer.site .site-legal {
 footer.site .site-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 10px;
-  margin-left: -6px; /* .k pads 6px; line the first bracket up with the spans above */
+  gap: 6px 16px;
+  margin: 4px 0 0 -6px; /* .k pads 6px; line the first bracket up with the spans above */
 }
 footer.site .site-legal {
   color: var(--dim);
   font-size: 12px;
+  margin-top: 4px;
 }
 .error .actions {
   display: flex;
